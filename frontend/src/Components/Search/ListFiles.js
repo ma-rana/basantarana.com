@@ -3,11 +3,11 @@ import { MdOutlineKeyboardDoubleArrowRight } from "react-icons/md";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { MdOutlineCloudDownload } from "react-icons/md";
 
-const foundFiles = "0 Files";
+const foundFiles = "4 files found";
 const EmptyFiles = () => {
   return (
     <div className="w-full flex items-center justify-center rounded-md">
-      <p className="text-gray-500">No files found</p>
+      <p className="text-gray-500 cursor-default">No files found</p>
     </div>
   );
 };
@@ -36,7 +36,7 @@ const RecordFiles = () => {
       <div className="border-solid shadow-sm border-[0.5px] border-gray-500 p-2 rounded-md bg-gray-50">
         <div className="flex justify-between items-center text-[0.9rem] text-gray-500 px-4">
           <div className="w-full">
-            <span className="">Filename.pdf</span>
+            <span className="cursor-default">Filename.pdf</span>
           </div>
           <div className="w-1/2 flex justify-between items-center gap-x-3">
             <div>
@@ -60,7 +60,7 @@ const RecordFiles = () => {
       <div className="border-solid shadow-sm border-[0.5px] border-gray-500 p-2 rounded-md bg-gray-50">
         <div className="flex justify-between items-center text-[0.9rem] text-gray-500 px-4">
           <div className="w-full">
-            <span className="">Filename.pdf</span>
+            <span className="cursor-default">Filename.pdf</span>
           </div>
           <div className="w-1/2 flex justify-between items-center gap-x-3">
             <div>
@@ -84,7 +84,7 @@ const RecordFiles = () => {
       <div className="border-solid shadow-sm border-[0.5px] border-gray-500 p-2 rounded-md bg-gray-50">
         <div className="flex justify-between items-center text-[0.9rem] text-gray-500 px-4">
           <div className="w-full">
-            <span className="">Filename.pdf</span>
+            <span className="cursor-default">Filename.pdf</span>
           </div>
           <div className="w-1/2 flex justify-between items-center gap-x-3">
             <div>
@@ -108,7 +108,7 @@ const RecordFiles = () => {
       <div className="border-solid shadow-sm border-[0.5px] border-gray-500 p-2 rounded-md bg-gray-50">
         <div className="flex justify-between items-center text-[0.9rem] text-gray-500 px-4">
           <div className="w-full">
-            <span className="">Filename.pdf</span>
+            <span className="cursor-default">Filename.pdf</span>
           </div>
           <div className="w-1/2 flex justify-between items-center gap-x-3">
             <div>
@@ -135,8 +135,8 @@ const ListFiles = () => {
   return (
     <div className="mt-7">
       <div className="flex items-center justify-between px-2">
-        <p className="text-[1rem]">Result files</p>
-        <p className="text-[1rem] text-gray-500">{foundFiles}</p>
+        <p className="text-[1rem] cursor-default">Result files</p>
+        <p className="text-[1rem] text-gray-500 cursor-default">{foundFiles}</p>
       </div>
       <div className="mt-5 p-7 bg-gray-100 shadow-sm rounded-md">
         {/* <EmptyFiles /> */}
