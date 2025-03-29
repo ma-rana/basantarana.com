@@ -11,7 +11,7 @@ const Signup1 = () => {
     " w-full py-1 px-3 outline-none border-b-solid border-b-[1.5px] border-b-gray-400 hover:border-b-blue-400 duration-100 focus:border-b-blue-500 mb-1 text-[1rem] max-sm:rounded-none max-sm:text-[0.9rem] appearance-none";
   return (
     <div className="pt-5">
-      <div className="max-sm:w-10/12 max-md:w-10/12 max-lg:w-10/12 w-1/2 bg-white p-10 max-sm:p-5 rounded-md shadow-sm my-0 mx-auto">
+      <div className="max-sm:w-10/12 max-md:w-10/12 max-lg:w-10/12 w-1/2 bg-white p-10 max-sm:p-5 rounded-md shadow-sm my-10 mx-auto">
         <div className="mb-10 max-sm:mb-5 text-center">
           <span className="title text-[1.6rem] max-sm:text-[1.2rem] text-gray-700 ">
             Create an new account
