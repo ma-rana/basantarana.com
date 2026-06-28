@@ -1,4 +1,39 @@
-<section class="hero"><h1>{{ profile.name }}</h1><p class="kicker">{{ profile.headline }}</p><p class="lead">{{ profile.bio.long }}</p></section>
-{% if projects.size > 0 %}<section><h2>Selected work</h2><div class="grid">
-{% for project in projects %}<a class="card" href="/projects/{{ project.slug }}"><h3>{{ project.title }}</h3><p>{{ project.summary }}</p></a>{% endfor %}
-</div></section>{% endif %}
+<section class="hero">
+  {% if profile.background %}<div class="hero-bg" style="background-image:url('{{ profile.background }}')"></div>{% endif %}
+  <div class="wrap">
+    <div class="hero-top">
+      {% if profile.avatar %}<img class="avatar" src="{{ profile.avatar }}" alt="{{ profile.name }}">{% endif %}
+      <p class="headline">{{ profile.headline }}</p>
+    </div>
+    <h1>{{ profile.name }}</h1>
+    <p class="lead">{{ profile.bio.medium }}</p>
+    <div class="cta-row">
+      <a class="btn solid" href="/contact">Get in touch</a>
+      {% if profile.cv %}<a class="btn" href="{{ profile.cv }}" download>Download CV</a>{% endif %}
+    </div>
+  </div>
+</section>
+
+{% if projects.size > 0 %}
+<section><div class="wrap">
+  <div class="sec-head"><div><p class="eyebrow">// Selected work</p><h2>Projects</h2></div></div>
+  {% for project in projects %}
+  <a class="proj" href="/projects/{{ project.slug }}">
+    <div class="proj-num">{{ project.order | prepend: '0' | slice: -2, 2 }}{% if project.featured %} <span class="star">★</span>{% endif %}</div>
+    <div>
+      <h3 class="proj-title">{{ project.title }}</h3>
+      <p class="proj-sum">{{ project.summary }}</p>
+      <div class="tags">{% for tag in project.tags %}<span class="tag">{{ tag }}</span>{% endfor %}</div>
+    </div>
+    <div>{% if project.thumbnail %}<img class="proj-thumb" src="{{ project.thumbnail }}" alt="{{ project.title }}">{% endif %}</div>
+  </a>
+  {% endfor %}
+</div></section>
+{% endif %}
+
+{% if stats.size > 0 %}
+<section><div class="wrap">
+  <div class="sec-head"><div><p class="eyebrow">// Around the web</p><h2>Reach</h2></div></div>
+  <div class="stats">{% for stat in stats %}<div class="stat"><b>{{ stat.value }}</b><small>{{ stat.label }}</small></div>{% endfor %}</div>
+</div></section>
+{% endif %}

@@ -38,12 +38,25 @@ type Row = {
 };
 
 // Map a DB row to a typed Project, validating the JSONB on READ.
+// Resilience: if a row's stored content doesn't match the current schema
+// (e.g. legacy/hand-edited data), we DON'T crash the whole list — we log it and
+// fall back to empty content so the rest of the project still renders. Writes
+// stay strict (create/update validate input before saving), so this only ever
+// rescues reads of pre-existing malformed data.
 function toProject(row: Row): Project {
+  const parsed = ProjectContentSchema.safeParse(row.content);
+  if (!parsed.success) {
+    console.warn(
+      `[project repo] content for project ${row.id} (${row.slug}) failed schema ` +
+        `validation; rendering with empty content. Issues:`,
+      parsed.error.issues,
+    );
+  }
   return {
     id: row.id, slug: row.slug, title: row.title, summary: row.summary,
     status: row.status, featured: row.featured, order: row.order,
     tags: row.tags.map((t) => t.tag.name),
-    content: ProjectContentSchema.parse(row.content), // READ-side validation
+    content: parsed.success ? parsed.data : [],
     createdAt: row.createdAt, updatedAt: row.updatedAt,
   };
 }

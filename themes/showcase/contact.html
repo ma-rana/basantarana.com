@@ -1,7 +1,17 @@
-<section><h1>Get in touch</h1>
-{% if formStatus == "sent" %}<p class="ok">Thanks — message sent.</p>{% elsif formStatus == "error" %}<p class="err">Something went wrong.</p>{% endif %}
-<form class="cform" method="POST" action="/api/contact">
-<input type="text" name="name" placeholder="Name" required>
-<input type="email" name="email" placeholder="Email" required>
-<textarea name="message" rows="5" placeholder="Message" required></textarea>
-<button type="submit">Send</button></form></section>
+<section class="hero"><div class="wrap">
+  <p class="eyebrow">// Contact</p>
+  <h1>Get in touch</h1>
+  <p class="lead">Send a message and I'll get back to you.</p>
+</div></section>
+
+<section><div class="wrap">
+  {% if formStatus == "sent" %}<p class="ok">Thanks — your message was sent.</p>
+  {% elsif formStatus == "error" %}<p class="err">Something went wrong. Please try again.</p>{% endif %}
+
+  <form class="cform" method="POST" action="/api/contact">
+    <label>Name<input type="text" name="name" required></label>
+    <label>Email<input type="email" name="email" required></label>
+    <label>Message<textarea name="message" rows="6" required></textarea></label>
+    <button type="submit">Send message</button>
+  </form>
+</div></section>

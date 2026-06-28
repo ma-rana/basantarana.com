@@ -7,10 +7,24 @@
   <link rel="stylesheet" href="/themes/showcase/style.css">
 </head>
 <body>
-  <header class="hdr"><a class="brand" href="/">{{ profile.name }}</a>
-    <nav><a href="/">Home</a><a href="/about">About</a><a href="/contact">Contact</a></nav>
+  <header class="hdr">
+    <div class="wrap">
+      <a class="brand" href="/">{{ profile.name }}</a>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+      </nav>
+    </div>
   </header>
-  <main>{{ content }}</main>
-  <footer class="ftr"><p>© {{ profile.name }}</p></footer>
+
+  {{ content }}
+
+  <footer class="ftr">
+    <div class="wrap">
+      <p>© {{ profile.name }}</p>
+      {% if profile.email %}<p>{{ profile.email }}</p>{% endif %}
+    </div>
+  </footer>
 </body>
 </html>

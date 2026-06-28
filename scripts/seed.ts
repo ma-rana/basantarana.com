@@ -62,8 +62,8 @@ async function main() {
       summary: "React Native sensor games for classroom science.",
       status: "PUBLISHED", featured: true, order: 1,
       content: [
-        { type: "heading", text: "Overview" },
-        { type: "text", text: "A classroom science game using phone sensors, for Years 5–8." },
+        { type: "heading", text: "Overview", level: 2 },
+        { type: "text", html: "<p>A classroom science game using phone sensors, for Years 5–8.</p>" },
       ],
       tags: { create: [{ tagId: react.id }, { tagId: mobile.id }] },
     },
@@ -73,7 +73,7 @@ async function main() {
       slug: "portfolio-cms", title: "Portfolio CMS",
       summary: "This very site — a custom CMS with swappable HTML themes.",
       status: "PUBLISHED", featured: true, order: 2,
-      content: [{ type: "text", text: "A data-driven CMS built to learn real engineering." }],
+      content: [{ type: "text", html: "<p>A data-driven CMS built to learn real engineering.</p>" }],
       tags: { create: [{ tagId: ts.id }, { tagId: react.id }] },
     },
   });
@@ -82,7 +82,7 @@ async function main() {
       slug: "visaflow", title: "VisaFlow",
       summary: "SMS appointment automation for migration agents.",
       status: "DRAFT", featured: false, order: 3,   // DRAFT: should NOT show publicly
-      content: [{ type: "text", text: "Automating reminders over SMS." }],
+      content: [{ type: "text", html: "<p>Automating reminders over SMS.</p>" }],
       tags: { create: [{ tagId: sms.id }] },
     },
   });
