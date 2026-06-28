@@ -12,6 +12,7 @@ import {
   createPlatformStat,
   updatePlatformStat,
   deletePlatformStat,
+  reorderPlatformStats,
 } from "../../../../lib/repos/platform-stat";
 
 export type StatFormState = {
@@ -83,4 +84,14 @@ export async function deleteStatAction(formData: FormData): Promise<void> {
   if (id) await deletePlatformStat(id);
   revalidatePath("/admin/stats");
   redirect("/admin/stats");
+}
+
+// Reorder from a drag-to-reorder. The client drag-list calls this directly with
+// the full ordered id list.
+export async function reorderStatsAction(orderedIds: string[]): Promise<void> {
+  await requireAdmin();
+  if (!Array.isArray(orderedIds)) return;
+  await reorderPlatformStats(orderedIds.filter((id) => typeof id === "string"));
+  revalidatePath("/admin/stats");
+  revalidatePath("/");
 }

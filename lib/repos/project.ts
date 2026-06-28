@@ -170,3 +170,21 @@ export async function deleteProject(id: string): Promise<void> {
   // ProjectTag rows cascade (onDelete: Cascade in the schema).
   await db.project.delete({ where: { id } }).catch(() => {});
 }
+
+// Persist an explicit order from a drag-to-reorder. `orderedIds` is the full
+// list of project ids in their new top-to-bottom order; each row's `order`
+// becomes its index. Only changed rows are written, in one transaction. Ids not
+// found are ignored; any project missing from the list keeps its current order
+// (so a stale client can't wipe positions it didn't know about).
+export async function reorderProjects(orderedIds: string[]): Promise<void> {
+  const existing = await db.project.findMany({ select: { id: true, order: true } });
+  const currentOrder = new Map(existing.map((p) => [p.id, p.order]));
+
+  const writes = orderedIds
+    .filter((id) => currentOrder.has(id))
+    .map((id, i) => ({ id, newOrder: i }))
+    .filter((p) => currentOrder.get(p.id) !== p.newOrder)
+    .map((p) => db.project.update({ where: { id: p.id }, data: { order: p.newOrder } }));
+
+  if (writes.length) await db.$transaction(writes);
+}

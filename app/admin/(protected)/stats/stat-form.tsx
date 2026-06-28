@@ -42,12 +42,11 @@ export function StatForm({
           <input name="value" type="number" min={0} defaultValue={stat?.value ?? 0} />
           {fe["value"] ? <em className="field-error">{fe["value"]}</em> : null}
         </label>
-        <label className="field">
-          <span>Order</span>
-          <input name="order" type="number" min={0} defaultValue={stat?.order ?? 0} />
-          {fe["order"] ? <em className="field-error">{fe["order"]}</em> : null}
-        </label>
       </div>
+
+      {/* Order is managed with the up/down buttons on the stats list, not here.
+          Preserve the current value so saves don't reset position. */}
+      <input type="hidden" name="order" defaultValue={stat?.order ?? 0} />
 
       {state.error ? <p className="form-error" role="alert">{state.error}</p> : null}
       {state.ok ? <p className="form-ok" role="status">Saved.</p> : null}

@@ -49,6 +49,10 @@ body {
   --adm-accent-strong: #334155;
   --adm-accent-tint: #eef1f5;
   --adm-focus: #2563eb;
+  /* Primary button fill — a deeper, richer slate so the main action carries
+     more presence than the nav accent. Hover lifts one step lighter. */
+  --adm-primary: #1e293b;
+  --adm-primary-hover: #334155;
   /* Status */
   --adm-danger: #c0392b;
   --adm-ok: #2e7d4f;
@@ -77,6 +81,10 @@ body {
     --adm-accent-strong: #cbd5e1;
     --adm-accent-tint: #1e2630;
     --adm-focus: #60a5fa;
+    /* In dark mode the primary fill is a light slate with dark text (set on the
+       button rule), so it stands out against the dark surfaces. */
+    --adm-primary: #cbd5e1;
+    --adm-primary-hover: #e2e8f0;
     --adm-danger: #f0857a;
     --adm-ok: #6ee7a0;
     --adm-warn: #e3b341;
@@ -494,19 +502,39 @@ button:focus-visible {
   transition: background 0.13s ease, border-color 0.13s ease, color 0.13s ease;
 }
 
-/* Primary — filled accent */
+/* Primary — deeper slate fill. The one main action per view. In dark mode the
+   fill is light, so text flips to the dark surface color for contrast. */
 .login-form button,
-.admin-logout button,
 .content-form button,
 .btn-primary {
-  background: var(--adm-accent-strong);
+  background: var(--adm-primary);
   color: #fff;
 }
 .login-form button:hover,
-.admin-logout button:hover,
 .content-form button:hover,
 .btn-primary:hover {
-  background: var(--adm-accent);
+  background: var(--adm-primary-hover);
+}
+@media (prefers-color-scheme: dark) {
+  .login-form button,
+  .content-form button,
+  .btn-primary {
+    color: var(--adm-bg);
+  }
+}
+
+/* Sign out — a utility action in the sidebar, not a main task. Quiet outlined
+   style so it doesn't compete with the active-nav highlight or primary CTAs. */
+.admin-logout button {
+  background: transparent;
+  border-color: var(--adm-line-strong);
+  color: var(--adm-ink-soft);
+  font-weight: 550;
+}
+.admin-logout button:hover {
+  background: var(--adm-surface-2);
+  border-color: var(--adm-accent);
+  color: var(--adm-ink);
 }
 
 /* Secondary — outlined neutral */
@@ -745,6 +773,130 @@ button:focus-visible {
   flex-wrap: wrap;
 }
 .table-footnote { margin-top: 1rem; font-size: 0.85rem; }
+
+/* ---------- Drag-to-reorder list ---------- */
+/* Replaces the data-table on reorderable lists (projects, skills, stats).
+   Rows look like table rows but are draggable; reordering saves on drop. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.drag-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  overflow: hidden;
+  background: var(--adm-surface);
+  transition: opacity 0.15s ease;
+}
+.drag-list.is-saving { opacity: 0.75; }
+.drag-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.8rem 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--adm-line);
+  background: var(--adm-surface);
+  transition: background 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+.drag-row:last-child { border-bottom: none; }
+.drag-row:hover { background: var(--adm-surface-2); }
+/* The row being dragged dims; the row it's hovering over shows a top accent line
+   as the drop indicator. */
+.drag-row.is-dragging { opacity: 0.4; }
+.drag-row.is-over {
+  box-shadow: inset 0 2px 0 var(--adm-accent);
+  background: var(--adm-accent-tint);
+}
+.drag-handle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: none;
+  background: transparent;
+  color: var(--adm-ink-faint);
+  cursor: grab;
+  border-radius: var(--adm-radius-sm);
+  font-size: 1rem;
+  line-height: 1;
+  touch-action: none;
+}
+.drag-handle:hover { background: var(--adm-line); color: var(--adm-ink); }
+.drag-handle:active { cursor: grabbing; }
+.drag-cell { min-width: 0; }
+.drag-primary {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.drag-primary-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--adm-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.drag-primary-label a { color: inherit; text-decoration: none; }
+.drag-primary-label a:hover { text-decoration: underline; }
+.drag-secondary {
+  font-size: 0.78rem;
+  color: var(--adm-ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.drag-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  font-size: 0.84rem;
+  color: var(--adm-ink-soft);
+}
+.drag-value { font-variant-numeric: tabular-nums; }
+.drag-flag { font-size: 0.78rem; color: var(--adm-warn); white-space: nowrap; }
+.drag-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+/* On narrow screens, let the meta wrap under the primary text so actions stay
+   reachable. */
+@media (max-width: 560px) {
+  .drag-row { flex-wrap: wrap; }
+  .drag-meta { order: 3; width: 100%; padding-left: 2.65rem; }
+  .drag-actions { order: 2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drag-list, .drag-row { transition: none; }
+}
+
+/* Skills: one drag-list per category */
+.skills-groups { display: flex; flex-direction: column; gap: 1.75rem; }
+.skills-group-title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 650;
+  color: var(--adm-ink-faint);
+  margin-bottom: 0.6rem;
+}
 .link-danger {
   background: none;
   border: none;
@@ -921,24 +1073,52 @@ button:focus-visible {
 }
 .stat-card-label { font-size: 0.8rem; color: var(--adm-ink-soft); }
 
-/* ---------- Theme upload ---------- */
-.theme-upload { margin: 1.2rem 0 0.75rem; }
-.theme-upload-form {
+/* ---------- Theme detail page (/themes/[key]) ---------- */
+.theme-title { display: flex; flex-direction: column; gap: 0.4rem; }
+.theme-title .btn-back { align-self: flex-start; margin-bottom: 0.1rem; }
+.theme-title h1 {
+  font-size: clamp(1.4rem, 1.1rem + 1.1vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--adm-ink);
+}
+.theme-title .row-sub {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
-.theme-upload-drop {
-  flex: 1;
-  min-width: 240px;
+.theme-title-badge { margin-left: 0.1rem; }
+
+/* Two-column layout: uploader beside the file checklist; stacks on narrow. */
+.theme-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+@media (min-width: 880px) {
+  .theme-grid { grid-template-columns: 1.3fr 1fr; align-items: start; }
+}
+.theme-panel { margin-top: 0; }
+
+/* Drop zone */
+.theme-upload { display: flex; flex-direction: column; gap: 0.85rem; }
+.theme-upload-form {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1.1rem 1.2rem;
-  border: 1px dashed var(--adm-line-strong);
+  gap: 0.75rem;
+}
+.theme-upload-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.35rem;
+  padding: 1.6rem 1.2rem;
+  border: 1.5px dashed var(--adm-line-strong);
   border-radius: var(--adm-radius);
-  background: var(--adm-surface);
+  background: var(--adm-surface-2);
   cursor: pointer;
   transition: border-color 0.14s ease, background 0.14s ease;
 }
@@ -946,35 +1126,146 @@ button:focus-visible {
   border-color: var(--adm-accent);
   background: var(--adm-accent-tint);
 }
-.theme-upload-drop input[type="file"] { font-size: 0.85rem; }
-.theme-upload-prompt { font-size: 0.82rem; color: var(--adm-ink-soft); }
-.theme-upload-status { margin-top: 0.9rem; font-size: 0.9rem; }
-.theme-upload-file-list {
-  list-style: none;
+.theme-upload-drop:focus-within {
+  outline: 2px solid var(--adm-focus);
+  outline-offset: 2px;
+}
+/* Hide the native file input — the whole label is the target. */
+.theme-upload-drop input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
   padding: 0;
-  margin: 0.35rem 0 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.theme-upload-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--adm-ink-faint);
+}
+.theme-upload-prompt {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--adm-ink);
+}
+.theme-upload-sub {
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--adm-ink-faint);
+  max-width: 42ch;
+}
+.theme-upload-form .btn-primary { align-self: flex-start; }
+.theme-upload-empty {
+  font-size: 0.85rem;
+  padding: 0.6rem 0;
+}
+.theme-upload-rejected {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-}
-.theme-upload-file-list li { display: flex; align-items: center; gap: 0.5rem; }
-.theme-file-delete { display: inline-flex; margin-left: auto; }
-.theme-upload-label { color: var(--adm-ink-soft); }
-.theme-upload-rejected {
-  margin: 0.5rem 0 0;
-  padding-left: 1.1rem;
   color: var(--adm-danger);
-  font-size: 0.85rem;
+  font-size: 0.84rem;
 }
-.theme-upload-rejected li { margin: 0.15rem 0; }
-.theme-upload-hint { font-size: 0.82rem; margin-top: 0.5rem; color: var(--adm-ink-soft); }
-.upload-note { font-size: 0.82rem; margin-bottom: 0.5rem; color: var(--adm-ink-soft); }
-.theme-actions {
+
+/* Uploaded-files list (deletable) */
+.theme-files { display: flex; flex-direction: column; gap: 0.4rem; }
+.theme-files-label {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 650;
+  color: var(--adm-ink-faint);
+}
+.theme-files-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius-sm);
+  overflow: hidden;
+}
+.theme-files-item {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  margin-top: 1.5rem;
+  gap: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid var(--adm-line);
+  font-size: 0.85rem;
+}
+.theme-files-item:last-child { border-bottom: none; }
+.theme-files-item code { font-size: 0.82rem; }
+.theme-file-delete { display: inline-flex; margin-left: auto; }
+
+/* File status checklist */
+.file-status {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.file-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--adm-line);
+}
+.file-status-row:last-child { border-bottom: none; }
+.file-status-dot {
+  flex-shrink: 0;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--adm-line-strong);
+  background: transparent;
+}
+.file-status-dot.is-present {
+  background: var(--adm-ok);
+  border-color: var(--adm-ok);
+}
+.file-status-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.file-status-name code { font-size: 0.84rem; color: var(--adm-ink); }
+.file-status-role { font-size: 0.74rem; color: var(--adm-ink-faint); }
+.file-status-state { font-size: 0.78rem; color: var(--adm-ink-faint); }
+.file-status-row[data-present="true"] .file-status-state { color: var(--adm-ok); }
+.file-status-tag { flex-shrink: 0; }
+.file-status-images {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: var(--adm-ink-soft);
+}
+
+/* Action bar — primary action left, destructive pinned right */
+.theme-actionbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   flex-wrap: wrap;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--adm-line);
+}
+.theme-actionbar-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 /* ---------- Media admin ---------- */

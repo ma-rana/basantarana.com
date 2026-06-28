@@ -42,12 +42,11 @@ export function SkillForm({
           <input name="level" type="number" min={0} max={100} defaultValue={skill?.level ?? 0} />
           {fe["level"] ? <em className="field-error">{fe["level"]}</em> : null}
         </label>
-        <label className="field">
-          <span>Order</span>
-          <input name="order" type="number" min={0} defaultValue={skill?.order ?? 0} />
-          {fe["order"] ? <em className="field-error">{fe["order"]}</em> : null}
-        </label>
       </div>
+
+      {/* Order is managed with the up/down buttons on the skills list, not here.
+          Preserve the current value so saves don't reset position. */}
+      <input type="hidden" name="order" defaultValue={skill?.order ?? 0} />
 
       {state.error ? <p className="form-error" role="alert">{state.error}</p> : null}
       {state.ok ? <p className="form-ok" role="status">Saved.</p> : null}

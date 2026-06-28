@@ -13,6 +13,7 @@ import {
   createProject,
   updateProject,
   deleteProject,
+  reorderProjects,
 } from "../../../../lib/repos/project";
 
 export type ProjectFormState = {
@@ -118,4 +119,15 @@ export async function deleteProjectAction(formData: FormData): Promise<void> {
   if (id) await deleteProject(id);
   revalidatePath("/admin/projects");
   redirect("/admin/projects");
+}
+
+// Reorder from a drag-to-reorder. Receives the full ordered id list directly
+// (the client drag-list calls this, not a form post). No redirect — revalidate
+// so the list re-renders; public ordering changes too (order asc), so / too.
+export async function reorderProjectsAction(orderedIds: string[]): Promise<void> {
+  await requireAdmin();
+  if (!Array.isArray(orderedIds)) return;
+  await reorderProjects(orderedIds.filter((id) => typeof id === "string"));
+  revalidatePath("/admin/projects");
+  revalidatePath("/");
 }

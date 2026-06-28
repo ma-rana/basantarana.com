@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "../../../../lib/auth/require-admin";
 import { SkillInputSchema } from "../../../../lib/schemas/skill";
-import { createSkill, updateSkill, deleteSkill } from "../../../../lib/repos/skill";
+import { createSkill, updateSkill, deleteSkill, reorderSkills } from "../../../../lib/repos/skill";
 
 export type SkillFormState = {
   ok: boolean;
@@ -70,4 +70,14 @@ export async function deleteSkillAction(formData: FormData): Promise<void> {
   if (id) await deleteSkill(id);
   revalidatePath("/admin/skills");
   redirect("/admin/skills");
+}
+
+// Reorder from a drag-to-reorder, scoped to one category. The client drag-list
+// calls this directly with the category and its new ordered id list.
+export async function reorderSkillsAction(category: string, orderedIds: string[]): Promise<void> {
+  await requireAdmin();
+  if (typeof category !== "string" || !Array.isArray(orderedIds)) return;
+  await reorderSkills(category, orderedIds.filter((id) => typeof id === "string"));
+  revalidatePath("/admin/skills");
+  revalidatePath("/");
 }

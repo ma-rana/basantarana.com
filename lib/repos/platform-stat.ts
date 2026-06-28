@@ -59,3 +59,20 @@ export async function updatePlatformStat(
 export async function deletePlatformStat(id: string): Promise<void> {
   await db.platformStat.delete({ where: { id } }).catch(() => {});
 }
+
+// Persist an explicit order from a drag-to-reorder. `orderedIds` is the full
+// list of stat ids in their new top-to-bottom order; each row's `order` becomes
+// its index. Only changed rows are written, in one transaction. Unknown ids are
+// ignored.
+export async function reorderPlatformStats(orderedIds: string[]): Promise<void> {
+  const existing = await db.platformStat.findMany({ select: { id: true, order: true } });
+  const currentOrder = new Map(existing.map((s) => [s.id, s.order]));
+
+  const writes = orderedIds
+    .filter((id) => currentOrder.has(id))
+    .map((id, i) => ({ id, newOrder: i }))
+    .filter((s) => currentOrder.get(s.id) !== s.newOrder)
+    .map((s) => db.platformStat.update({ where: { id: s.id }, data: { order: s.newOrder } }));
+
+  if (writes.length) await db.$transaction(writes);
+}

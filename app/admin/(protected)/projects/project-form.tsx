@@ -109,15 +109,15 @@ export function ProjectForm({
             <option value="ARCHIVED">Archived</option>
           </select>
         </label>
-        <label className="field">
-          <span>Order</span>
-          <input name="order" type="number" min={0} defaultValue={project?.order ?? 0} />
-        </label>
         <label className="field checkbox">
           <input name="featured" type="checkbox" defaultChecked={project?.featured ?? false} />
           <span>Featured</span>
         </label>
       </div>
+
+      {/* Order is managed with the up/down buttons on the projects list, not
+          here. Preserve the current value so saves don't reset position. */}
+      <input type="hidden" name="order" defaultValue={project?.order ?? 0} />
 
       <fieldset className="field-group">
         <legend>Tags</legend>
