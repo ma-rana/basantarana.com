@@ -115,30 +115,15 @@ model PlatformStat {
   @@unique([platform, label])
 }
 
-model Section {
-  id      String      @id @default(cuid())
-  type    SectionType                    // filterable -> relational
-  enabled Boolean     @default(true)
-  order   Int         @default(0)
-  // JSONB: per-section, per-theme settings (heading text, layout opts...)
-  config  Json?
-  @@index([enabled, order])
-}
-
-enum SectionType {
-  HERO
-  ABOUT
-  PROJECTS
-  SKILLS
-  STATS
-  CONTACT
-}
-
 model Theme {
   id       String  @id @default(cuid())
   key      String  @unique               // matches a folder in themes/<key>/
   name     String
   isActive Boolean @default(false)
+  // "builtin" -> rendered from the repo's themes/<key>/ dir (ships with code).
+  // "uploaded" -> rendered from the writable THEME_UPLOAD_DIR/<key>/ dir, so
+  // admin-uploaded themes survive redeploys. The engine resolves files by this.
+  source   String  @default("builtin")
 }
 
 model EngagementEvent {
@@ -146,7 +131,13 @@ model EngagementEvent {
   type       String                       // "view","like"
   targetType String                       // "profile","project"
   targetId   String?
+  // sessionId is set for LIKES (anonymous like_session cookie) so one visitor
+  // can't like the same target twice. NULL for views. The unique index below
+  // works for both: Postgres treats NULLs as distinct, so view rows never
+  // collide, while like rows with the same session collide (idempotent).
+  sessionId  String?
   createdAt  DateTime @default(now())
+  @@unique([type, targetType, targetId, sessionId])
   @@index([targetType, targetId, type])
 }
 

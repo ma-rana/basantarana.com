@@ -30,4 +30,10 @@
     {% for img in project.gallery %}<img src="{{ img }}" alt="">{% endfor %}
   </div>
   {% endif %}
+
+  <form class="like" method="POST" action="/api/engagement/like">
+    <input type="hidden" name="slug" value="{{ project.slug }}">
+    <button type="submit">♥ Like</button>
+    <span class="like-count">{{ project.likes }}</span>
+  </form>
 </section>

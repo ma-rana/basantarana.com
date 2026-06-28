@@ -26,7 +26,6 @@ async function main() {
   await db.tag.deleteMany();
   await db.skill.deleteMany();
   await db.platformStat.deleteMany();
-  await db.section.deleteMany();
   await db.theme.deleteMany();
   await db.mediaAsset.deleteMany();
   await db.profile.deleteMany();
@@ -103,18 +102,6 @@ async function main() {
       { platform: "github", label: "Followers", value: 120, order: 1 },
       { platform: "youtube", label: "Subscribers", value: 540, order: 2 },
       { platform: "linkedin", label: "Connections", value: 800, order: 3 },
-    ],
-  });
-
-  // --- Sections (which parts show, in what order) ---
-  await db.section.createMany({
-    data: [
-      { type: "HERO", enabled: true, order: 1 },
-      { type: "ABOUT", enabled: true, order: 2 },
-      { type: "PROJECTS", enabled: true, order: 3 },
-      { type: "SKILLS", enabled: true, order: 4 },
-      { type: "STATS", enabled: true, order: 5 },
-      { type: "CONTACT", enabled: true, order: 6 },
     ],
   });
 

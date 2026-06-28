@@ -1,9 +1,19 @@
-{%- comment -%} home.html → served at "/" {%- endcomment -%}
+{%- comment -%}
+  home.html → served at "/". The theme controls its own section order directly
+  here (no data-driven section list). Edit/reorder these bands as you like.
+{%- endcomment -%}
 <section class="hero">
   <h1>{{ profile.name }}</h1>
   <p class="headline">{{ profile.headline }}</p>
   <p>{{ profile.bio.short }}</p>
 </section>
+
+{% if profile.bio.medium %}
+<section>
+  <h2>About</h2>
+  <p>{{ profile.bio.medium }}</p>
+</section>
+{% endif %}
 
 {% if projects.size > 0 %}
 <section>
@@ -24,3 +34,17 @@
   <p class="skills">{% for skill in skills %}<span>{{ skill.name }}</span>{% endfor %}</p>
 </section>
 {% endif %}
+
+{% if stats.size > 0 %}
+<section>
+  <h2>Around the web</h2>
+  <div class="stats">
+    {% for stat in stats %}<div class="stat"><b>{{ stat.value }}</b><small>{{ stat.label }}</small></div>{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section>
+  <h2>Get in touch</h2>
+  <p><a href="/contact">Send me a message →</a></p>
+</section>

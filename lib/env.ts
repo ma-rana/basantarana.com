@@ -15,6 +15,10 @@ export const EnvSchema = z.object({
   ADMIN_URL: z.url(),
   ADMIN_COOKIE_DOMAIN: z.string().min(1),
   NODE_ENV: z.enum(["development", "production", "test"]),
+  // Where admin-uploaded themes are stored. A writable dir OUTSIDE the repo so
+  // uploaded themes survive redeploys (built-in themes ship in themes/). Has a
+  // sensible default so existing .env files don't break.
+  THEME_UPLOAD_DIR: z.string().min(1).default("./storage/themes"),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

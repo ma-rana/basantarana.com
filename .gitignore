@@ -39,6 +39,13 @@ yarn-error.log*
 # generated prisma client (regenerated via `prisma generate`)
 /app/generated
 
+# uploaded themes (admin-created at runtime; not part of the repo)
+/storage
+
+# uploaded media files (runtime; keep the directory, ignore the files)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
 # vercel
 .vercel
 

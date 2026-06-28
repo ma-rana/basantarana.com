@@ -4,6 +4,54 @@
 > like a public_html folder. Each page maps to a real URL on the live site.
 > Keep it flat — no subfolders needed.
 
+## Two kinds of theme: built-in vs uploaded
+There are two ways a theme gets into the system:
+
+1. **Built-in** — a folder committed to the repo under `themes/<key>/` (the
+   three that ship: minimal, showcase, simple-basic). Edited in code, deployed
+   with the app.
+2. **Uploaded** — created from the admin (Themes → Create a theme), then its
+   files are uploaded one at a time. Stored OUTSIDE the repo in
+   `THEME_UPLOAD_DIR` (default `./storage/themes/<key>/`) so they survive
+   redeploys. Same engine, same placeholders, same URL rules — only the storage
+   location differs.
+
+### Uploading a theme from the admin
+1. Themes → **Create a theme** → enter a key (lowercase-hyphens) and display name.
+2. On the theme's page, upload each file into its slot: `layout.html`,
+   `home.html`, `about.html`, `contact.html`, `project.html`, `style.css`.
+3. Each `.html` is validated as a Liquid template on upload — a malformed file is
+   rejected and never saved, so it can't break the public site.
+4. Once all page files are present, **Activate** the theme.
+
+The files are identical in form to built-in themes (this guide's placeholders and
+URL rules all apply). The easiest way to make one is to copy a built-in theme's
+files, tweak them, and upload them. Note the CSS link inside your uploaded
+`layout.html` must still be `/themes/<your-key>/style.css`.
+
+## Which files are required
+Only **`home.html`** is required for a theme to be valid and activatable. Every
+other file is optional:
+- **No `layout.html`** → each page is served on its own, unwrapped. (Put your
+  `<!DOCTYPE html>`, `<head>`, and CSS link straight in the page files instead.)
+- **No `about.html` / `contact.html` / `project.html`** → that URL returns a
+  clean 404, and the nav won't link to it (see `pages` flags below).
+- **No `style.css`** → fine; put your CSS in a `<style>` block inline. A
+  single self-contained `home.html` with inline CSS is a complete valid theme.
+
+### The `pages` flags (don't link missing pages)
+The engine tells each page which optional pages exist, so your nav can hide
+links to pages this theme doesn't provide:
+```liquid
+<nav>
+  <a href="/">Home</a>
+  {% if pages.about %}<a href="/about">About</a>{% endif %}
+  {% if pages.contact %}<a href="/contact">Contact</a>{% endif %}
+</nav>
+```
+`pages.about`, `pages.contact`, `pages.project` are true only when that file
+exists for the active theme. (Home is always present — it's required.)
+
 ## The folder (flat)
 The folder NAME is the theme's name (its "key"). Name it after the style —
 `simple-basic`, `dark-modern`, `client-acme` — not a generic "my-theme".

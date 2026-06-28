@@ -1,0 +1,2 @@
+# This directory is where uploaded media files live at runtime.
+# The directory is tracked; the files are not (see .gitignore).

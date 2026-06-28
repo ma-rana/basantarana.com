@@ -1,15 +1,16 @@
-// app/admin/(protected)/themes/page.tsx — theme switcher.
-// Lists registered themes; the active one is marked, others get an Activate button.
+// app/admin/(protected)/themes/page.tsx — theme switcher + create uploaded themes.
 
+import Link from "next/link";
 import { requireAdmin } from "../../../../lib/auth/require-admin";
-import { db } from "../../../../lib/db";
+import { listThemes } from "../../../../lib/repos/theme";
 import { activateThemeAction } from "./actions";
+import { CreateThemeForm } from "./create-theme-form";
 
 export const metadata = { title: "Themes · Admin" };
 
 export default async function ThemesPage() {
   await requireAdmin();
-  const themes = await db.theme.findMany({ orderBy: { name: "asc" } });
+  const themes = await listThemes();
 
   return (
     <section className="content-page wide">
@@ -23,13 +24,22 @@ export default async function ThemesPage() {
       ) : (
         <table className="data-table">
           <thead>
-            <tr><th>Theme</th><th>Key</th><th>Status</th><th></th></tr>
+            <tr><th>Theme</th><th>Key</th><th>Source</th><th>Status</th><th></th></tr>
           </thead>
           <tbody>
             {themes.map((t) => (
               <tr key={t.id}>
-                <td>{t.name}</td>
+                <td>
+                  {t.source === "uploaded"
+                    ? <Link href={`/admin/themes/${t.key}`}>{t.name}</Link>
+                    : t.name}
+                </td>
                 <td><span className="row-sub">{t.key}</span></td>
+                <td>
+                  {t.source === "uploaded"
+                    ? <span className="badge badge-draft">Uploaded</span>
+                    : <span className="row-sub">Built-in</span>}
+                </td>
                 <td>
                   {t.isActive
                     ? <span className="badge badge-published">Active</span>
@@ -44,6 +54,9 @@ export default async function ThemesPage() {
                       <button type="submit" className="btn-primary">Activate</button>
                     </form>
                   )}
+                  {t.source === "uploaded" ? (
+                    <Link href={`/admin/themes/${t.key}`}>Edit files</Link>
+                  ) : null}
                 </td>
               </tr>
             ))}
@@ -51,9 +64,13 @@ export default async function ThemesPage() {
         </table>
       )}
 
-      <p className="muted" style={{ marginTop: "1rem" }}>
-        Preview the live result at your public site root after activating.
+      <h2 style={{ marginTop: "2rem" }}>Create a theme</h2>
+      <p className="muted">
+        Make a new uploaded theme, then add its page files (layout, home, about,
+        contact, project) and a stylesheet. Files are Liquid templates — same
+        placeholders as the built-in themes (see the cheatsheet).
       </p>
+      <CreateThemeForm />
     </section>
   );
 }

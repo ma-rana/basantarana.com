@@ -41,8 +41,23 @@ Optional — wrap in {% if %}. Unset values are null (correctly falsy).
   {% if project.thumbnail %}<img src="{{ project.thumbnail }}">{% endif %}   ← optional
   {% for img in project.gallery %}{{ img }}{% endfor %}                       ← optional
   {% for tag in project.tags %}{{ tag }}{% endfor %}
+  {{ project.likes }}                                                         ← like count (number)
 {% endfor %}
 ```
+
+## Like button (project.html)
+Projects can be liked anonymously. Add a form that POSTs the slug to the like
+handler; the engine provides the current count as `{{ project.likes }}`.
+```liquid
+<form method="POST" action="/api/engagement/like">
+  <input type="hidden" name="slug" value="{{ project.slug }}">
+  <button type="submit">♥ Like</button>
+  <span>{{ project.likes }}</span>
+</form>
+```
+The handler sets an anonymous cookie so one visitor can't inflate the count, then
+redirects back. Views (home + project pages) are recorded automatically by the
+engine — no theme markup needed for those.
 
 ## A single project's content blocks (on project.html, via {{ project }})
 ```liquid
@@ -86,6 +101,23 @@ Optional — wrap in {% if %}. Unset values are null (correctly falsy).
 - `{{ content }}` — in layout.html only; the current page's HTML drops in here.
 - `{{ project }}` — on project.html only; the project matched by the URL.
 - `{{ formStatus }}` — on contact.html only; "sent" / "error" / "" after submit.
+
+## Home page composition (home.html)
+The home page's layout lives entirely in `home.html` — the theme author decides
+which bands appear and in what order by writing them directly. There's no
+data-driven section list. A typical home loops the lists this cheat sheet
+describes (projects, skills, stats) inside whatever band markup you want, in the
+order you write them:
+```liquid
+<section class="hero">...{{ profile.name }}...</section>
+<section>...{{ profile.bio.medium }}...</section>
+{% if projects.size > 0 %}<section>...loop projects...</section>{% endif %}
+{% if skills.size > 0 %}<section>...loop skills...</section>{% endif %}
+{% if stats.size > 0 %}<section>...loop stats...</section>{% endif %}
+<section>...contact CTA...</section>
+```
+Reorder, add, or drop bands by editing home.html. Each `{% if ... %}` keeps a
+band from rendering empty when there's no data for it.
 
 ## Rules of the road
 - Only the placeholders above work — they map to real data. Inventing

@@ -10,6 +10,7 @@ import { getActiveMedia } from "../app/lib/media";
 
 beforeAll(async () => {
   // Clean slate for the tables the engine reads.
+  await db.engagementEvent.deleteMany();
   await db.projectTag.deleteMany();
   await db.project.deleteMany();
   await db.tag.deleteMany();
@@ -43,6 +44,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // renderPage() fires view records fire-and-forget (not awaited). Give any
+  // in-flight writes a moment to land, THEN clear EngagementEvent so this
+  // suite's stray views don't leak into the engagement suite's counts.
+  await new Promise((r) => setTimeout(r, 50));
+  await db.engagementEvent.deleteMany();
   await db.projectTag.deleteMany();
   await db.project.deleteMany();
   await db.tag.deleteMany();

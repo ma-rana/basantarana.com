@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // treat these as external server packages, or the generated Prisma client
   // fails to resolve (".prisma/client/default" module error). See Prisma 7 +
   // Next.js 16 upgrade notes.
-  serverExternalPackages: ["@prisma/client", "pg", "argon2", "sanitize-html"],
+  serverExternalPackages: ["@prisma/client", "pg", "argon2", "sanitize-html", "sharp"],
 };
 
 export default nextConfig;

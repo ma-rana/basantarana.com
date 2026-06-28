@@ -1,3 +1,7 @@
+{%- comment -%}
+  home.html → served at "/". The theme controls its own section order directly
+  here (no data-driven section list). Edit/reorder these bands as you like.
+{%- endcomment -%}
 <section class="hero">
   {% if profile.background %}<div class="hero-bg" style="background-image:url('{{ profile.background }}')"></div>{% endif %}
   <div class="wrap">
@@ -13,6 +17,13 @@
     </div>
   </div>
 </section>
+
+{% if profile.bio.long %}
+<section><div class="wrap">
+  <div class="sec-head"><div><p class="eyebrow">// About</p><h2>Background</h2></div></div>
+  <div class="prose"><p>{{ profile.bio.long }}</p></div>
+</div></section>
+{% endif %}
 
 {% if projects.size > 0 %}
 <section><div class="wrap">
@@ -31,9 +42,32 @@
 </div></section>
 {% endif %}
 
+{% if skills.size > 0 %}
+<section><div class="wrap">
+  <div class="sec-head"><div><p class="eyebrow">// Toolkit</p><h2>Skills</h2></div></div>
+  {% assign grouped = skills | group_by: "category" %}
+  {% for group in grouped %}
+  <div class="skill-group">
+    <h3>{{ group.name }}</h3>
+    {% for skill in group.items %}
+    <div class="skill">
+      <span class="skill-name">{{ skill.name }}</span>
+      <div class="bar"><i style="width:{{ skill.level }}%"></i></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div></section>
+{% endif %}
+
 {% if stats.size > 0 %}
 <section><div class="wrap">
   <div class="sec-head"><div><p class="eyebrow">// Around the web</p><h2>Reach</h2></div></div>
   <div class="stats">{% for stat in stats %}<div class="stat"><b>{{ stat.value }}</b><small>{{ stat.label }}</small></div>{% endfor %}</div>
 </div></section>
 {% endif %}
+
+<section><div class="wrap">
+  <div class="sec-head"><div><p class="eyebrow">// Say hello</p><h2>Get in touch</h2></div></div>
+  <a class="btn solid" href="/contact">Send a message</a>
+</div></section>
