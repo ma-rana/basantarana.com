@@ -1,0 +1,2 @@
+<section><h1>About</h1><p class="lead">{{ profile.bio.long }}</p></section>
+{% if stats.size > 0 %}<section><h2>Reach</h2><div class="stats">{% for stat in stats %}<div class="stat"><b>{{ stat.value }}</b><small>{{ stat.label }}</small></div>{% endfor %}</div></section>{% endif %}

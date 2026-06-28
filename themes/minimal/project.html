@@ -1,0 +1,36 @@
+{%- comment -%}
+  project.html → served at "/projects/SLUG" for ANY project.
+  ONE template serves every project page. {{ project }} is the matched project.
+  Content blocks match the admin's block types: heading, text, code, image, embed.
+  The text block's html is sanitized on save, so it's emitted as-is here.
+{%- endcomment -%}
+<section>
+  <a class="back" href="/">← Back</a>
+  <h1>{{ project.title }}</h1>
+  <p class="headline">{{ project.summary }}</p>
+  {% for tag in project.tags %}<span class="tag">{{ tag }}</span>{% endfor %}
+
+  {% if project.thumbnail %}<img class="thumb" src="{{ project.thumbnail }}" alt="{{ project.title }}">{% endif %}
+
+  <div class="content">
+  {% for block in project.content %}
+    {% if block.type == "heading" %}
+      {% if block.level == 3 %}<h3>{{ block.text }}</h3>{% else %}<h2>{{ block.text }}</h2>{% endif %}
+    {% elsif block.type == "text" %}
+      <div class="block-text">{{ block.html }}</div>
+    {% elsif block.type == "code" %}
+      <pre class="block-code"><code>{{ block.code }}</code></pre>
+    {% elsif block.type == "image" %}
+      <img src="{{ block.url }}" alt="{{ block.alt }}">
+    {% elsif block.type == "embed" %}
+      <p><a href="{{ block.url }}">{{ block.url }}</a></p>
+    {% endif %}
+  {% endfor %}
+  </div>
+
+  {% if project.gallery.size > 0 %}
+  <div class="gallery">
+    {% for img in project.gallery %}<img src="{{ img }}" alt="">{% endfor %}
+  </div>
+  {% endif %}
+</section>

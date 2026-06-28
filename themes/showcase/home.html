@@ -1,0 +1,4 @@
+<section class="hero"><h1>{{ profile.name }}</h1><p class="kicker">{{ profile.headline }}</p><p class="lead">{{ profile.bio.long }}</p></section>
+{% if projects.size > 0 %}<section><h2>Selected work</h2><div class="grid">
+{% for project in projects %}<a class="card" href="/projects/{{ project.slug }}"><h3>{{ project.title }}</h3><p>{{ project.summary }}</p></a>{% endfor %}
+</div></section>{% endif %}

@@ -1,0 +1,32 @@
+{%- comment -%}
+  layout.html — the shared wrapper for every page in this theme.
+  The current page's content drops into {{ content }}. Put the header, footer,
+  nav, and the CSS link here ONCE so every page gets them automatically.
+{%- endcomment -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page.title }} — {{ profile.name }}</title>
+  <link rel="stylesheet" href="/themes/minimal/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">{{ profile.name }}</a>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    {{ content }}
+  </main>
+
+  <footer class="site-footer">
+    <p>© {{ profile.name }}</p>
+  </footer>
+</body>
+</html>

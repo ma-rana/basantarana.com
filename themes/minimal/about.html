@@ -1,0 +1,17 @@
+{%- comment -%} about.html → served at "/about" {%- endcomment -%}
+<section>
+  <h1>About</h1>
+  <p>{{ profile.bio.long }}</p>
+  {% if profile.location %}<p class="meta">Based in {{ profile.location }}</p>{% endif %}
+</section>
+
+{% if stats.size > 0 %}
+<section>
+  <h2>Around the web</h2>
+  <div class="stats">
+    {% for stat in stats %}
+      <div class="stat"><b>{{ stat.value }}</b><small>{{ stat.label }}</small></div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}

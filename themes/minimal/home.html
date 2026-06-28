@@ -1,0 +1,26 @@
+{%- comment -%} home.html → served at "/" {%- endcomment -%}
+<section class="hero">
+  <h1>{{ profile.name }}</h1>
+  <p class="headline">{{ profile.headline }}</p>
+  <p>{{ profile.bio.short }}</p>
+</section>
+
+{% if projects.size > 0 %}
+<section>
+  <h2>Projects</h2>
+  {% for project in projects %}
+    <a class="card" href="/projects/{{ project.slug }}">
+      <h3>{{ project.title }}</h3>
+      <p>{{ project.summary }}</p>
+      {% for tag in project.tags %}<span class="tag">{{ tag }}</span>{% endfor %}
+    </a>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if skills.size > 0 %}
+<section>
+  <h2>Skills</h2>
+  <p class="skills">{% for skill in skills %}<span>{{ skill.name }}</span>{% endfor %}</p>
+</section>
+{% endif %}

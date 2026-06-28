@@ -1,0 +1,34 @@
+/* style.css — shared by every page via layout.html */
+* { box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; max-width: 680px; margin: 0 auto; padding: 0 20px; color: #1a1a1a; background: #fff; line-height: 1.6; }
+.site-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid #eee; }
+.site-header .brand { font-weight: 600; text-decoration: none; color: #1a1a1a; }
+.site-header nav a { margin-left: 16px; text-decoration: none; color: #6b7280; }
+.site-header nav a:hover { color: #1a1a1a; }
+main { padding: 32px 0; }
+h1 { font-size: 32px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 32px 0 12px; }
+.headline { color: #6b7280; }
+.card { display: block; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; margin-bottom: 8px; text-decoration: none; color: inherit; }
+.card:hover { border-color: #9ca3af; }
+.card h3 { margin: 0 0 4px; font-size: 15px; }
+.card p { margin: 0; color: #6b7280; font-size: 14px; }
+.tag { display: inline-block; font-size: 12px; color: #374151; background: #f3f4f6; border-radius: 4px; padding: 2px 8px; margin: 6px 4px 0 0; }
+.skills span { margin-right: 10px; color: #374151; }
+.stats { display: flex; gap: 20px; }
+.stat b { display: block; font-size: 22px; }
+.stat small { color: #6b7280; }
+.thumb { max-width: 100%; border-radius: 8px; margin: 16px 0; }
+.content img { max-width: 100%; border-radius: 6px; margin: 12px 0; }
+.block-code { background: #f6f8fa; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 13px; }
+.gallery { display: flex; flex-wrap: wrap; gap: 8px; }
+.gallery img { max-width: 48%; border-radius: 6px; }
+.contact-form { display: flex; flex-direction: column; gap: 12px; max-width: 420px; margin-top: 16px; }
+.contact-form label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: #374151; }
+.contact-form input, .contact-form textarea { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font: inherit; }
+.contact-form button { padding: 10px; border: none; border-radius: 6px; background: #1a1a1a; color: #fff; font: inherit; cursor: pointer; }
+.form-ok { color: #16a34a; }
+.form-error { color: #dc2626; }
+.site-footer { padding: 24px 0; border-top: 1px solid #eee; color: #9ca3af; font-size: 14px; }
+.back { text-decoration: none; color: #6b7280; font-size: 14px; }
+.meta { color: #9ca3af; }

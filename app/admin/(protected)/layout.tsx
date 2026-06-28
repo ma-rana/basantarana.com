@@ -30,6 +30,7 @@ export default async function ProtectedAdminLayout({
           <Link href="/admin/projects">Projects</Link>
           <Link href="/admin/skills">Skills</Link>
           <Link href="/admin/stats">Platform stats</Link>
+          <Link href="/admin/themes">Themes</Link>
         </nav>
         <form action={logoutAction} className="admin-logout">
           <span className="admin-user">{user.email}</span>
