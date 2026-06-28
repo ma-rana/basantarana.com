@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio CMS
 
-## Getting Started
+A fully custom, data-driven CMS powering basantarana.com. All content (profile,
+projects, skills, platform stats) is managed from a secure admin portal; the
+public site renders the same data through swappable HTML themes.
 
-First, run the development server:
+Stack: Next.js 16 (App Router) + TypeScript · PostgreSQL 17 + Prisma 7 · Zod ·
+Tailwind. One app serves the public site (`basantarana.com`) and admin
+(`admin.basantarana.com`), split by hostname in `middleware.ts`.
+
+## Local setup (Phase 0)
+
+### 1. Install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Start a local Postgres (Docker)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+docker run --name portfolio-pg \
+  -e POSTGRES_USER=app_user \
+  -e POSTGRES_PASSWORD=devpassword \
+  -e POSTGRES_DB=portfolio_cms \
+  -p 5432:5432 \
+  -d postgres:17
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+(Stop/remove later with `docker stop portfolio-pg && docker rm portfolio-pg`.)
 
-## Learn More
+### 3. Configure environment
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+cp .env.example .env
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Then edit `.env`. For the Docker container above, use:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+DATABASE_URL="postgresql://app_user:devpassword@localhost:5432/portfolio_cms?schema=public"
+AUTH_SECRET="<run: openssl rand -base64 32>"
+```
 
-## Deploy on Vercel
+`lib/env.ts` validates these on startup with Zod — the app refuses to boot if
+any are missing or malformed.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. Generate client, migrate, seed
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run db:generate   # prisma generate -> app/generated/prisma
+npm run db:migrate    # prisma migrate dev (creates the first migration)
+npm run db:seed       # tsx scripts/seed.ts (sample data for local dev only)
+```
+
+The Prisma connection string lives in `prisma.config.ts` (the Prisma 7 way),
+**not** in the schema's datasource block.
+
+### 5. Run
+
+```bash
+npm run dev      # http://localhost:3000
+npm test         # vitest: env + JSONB schema tests
+```
+
+For the admin host locally, map `admin.localhost` (or use a hosts-file entry)
+and visit `http://admin.localhost:3000`.
+
+## Project conventions
+
+See `CLAUDE.md` for the full engineering rules. Key ones:
+
+- Data/presentation separation: themes are folders of HTML + Liquid placeholders.
+- Hybrid model: queryable fields are relational columns; render-only content is
+  JSONB, and **every JSONB field has a Zod schema** validated on write and read.
+- Prisma is a singleton (`lib/db.ts`).
+- Middleware is routing only — real auth is re-checked in every protected route.
+
+## Migrations
+
+- Local: `npm run db:migrate` (`prisma migrate dev`).
+- Production: `npm run db:deploy` (`prisma migrate deploy`) — never `dev`.

@@ -1,0 +1,179 @@
+// Portfolio CMS — starter schema (Prisma 7)
+// Connection string is in prisma.config.ts, NOT here (Prisma 7 change).
+// Principle: columns you FILTER/SORT by are relational; render-only flexible
+// content is Json (PostgreSQL JSONB). Every Json field has a Zod schema in
+// lib/schemas/ and is validated on write AND read.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String                  // hashed (argon2/bcrypt) — never plaintext
+  role      Role     @default(ADMIN) // multi-user-ready
+  sessions  Session[]               // DB-backed sessions (Lucia pattern)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// DB-backed sessions. `id` stores the SHA-256 hash of the session token, NOT
+// the token itself — the raw token lives only in the user's cookie. A DB leak
+// therefore yields no usable tokens. expiresAt enables real, server-side
+// invalidation (logout = delete the row) and sliding renewal.
+model Session {
+  id        String   @id            // sha256(token), hex
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  @@index([userId])
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  name        String
+  headline    String
+  email       String?
+  location    String?
+  // JSONB: short/medium/long variants, validated by Zod (BioVariantsSchema)
+  bioVariants Json
+  updatedAt   DateTime @updatedAt
+  // NOTE: profile holds TEXT only. Avatar/background/cover/CV live in
+  // MediaAsset (upload-many-activate-one), referenced in themes as
+  // {{ profile.avatar }} etc. — the engine merges active media into profile.
+}
+
+model Project {
+  id        String        @id @default(cuid())
+  slug      String        @unique           // queryable -> relational
+  title     String
+  summary   String                          // short, used by compact themes
+  status    ProjectStatus @default(DRAFT)   // filterable -> relational
+  featured  Boolean       @default(false)   // filterable -> relational
+  order     Int           @default(0)       // sortable -> relational
+  // JSONB: array of typed content blocks (heading/text/image/code/embed...)
+  content   Json
+  // JSONB: this project's OWN images { thumbnail: "url", gallery: ["url",...] }.
+  // Project images belong to the project (not the profile media library).
+  // Uploaded via the project edit form, referenced as {{ project.thumbnail }}.
+  media     Json?
+  tags      ProjectTag[]                     // queryable -> relational join
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status, featured, order])
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// Tags are relational (not JSONB) BECAUSE you filter by them.
+model Tag {
+  id       String       @id @default(cuid())
+  name     String       @unique
+  projects ProjectTag[]
+}
+
+model ProjectTag {
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     String
+  @@id([projectId, tagId])
+}
+
+model Skill {
+  id       String @id @default(cuid())
+  name     String
+  category String                       // filterable -> relational
+  level    Int    @default(0)           // 0-100, sortable
+  order    Int    @default(0)
+  @@index([category, order])
+}
+
+model PlatformStat {
+  id        String   @id @default(cuid())
+  platform  String                       // "youtube","github","linkedin"...
+  label     String                       // "Subscribers","Followers"
+  value     Int      @default(0)         // manual now; API-updated later
+  order     Int      @default(0)
+  updatedAt DateTime @updatedAt
+  @@unique([platform, label])
+}
+
+model Section {
+  id      String      @id @default(cuid())
+  type    SectionType                    // filterable -> relational
+  enabled Boolean     @default(true)
+  order   Int         @default(0)
+  // JSONB: per-section, per-theme settings (heading text, layout opts...)
+  config  Json?
+  @@index([enabled, order])
+}
+
+enum SectionType {
+  HERO
+  ABOUT
+  PROJECTS
+  SKILLS
+  STATS
+  CONTACT
+}
+
+model Theme {
+  id       String  @id @default(cuid())
+  key      String  @unique               // matches a folder in themes/<key>/
+  name     String
+  isActive Boolean @default(false)
+}
+
+model EngagementEvent {
+  id         String   @id @default(cuid())
+  type       String                       // "view","like"
+  targetType String                       // "profile","project"
+  targetId   String?
+  createdAt  DateTime @default(now())
+  @@index([targetType, targetId, type])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+// Media library: upload many per type, activate one. Same pattern as Theme.
+model MediaAsset {
+  id        String    @id @default(cuid())
+  type      MediaType                       // BACKGROUND / AVATAR / COVER / CV
+  url       String                          // link to the stored file
+  filename  String                          // original name, for the admin list
+  isActive  Boolean   @default(false)       // one active per type
+  version   Int       @default(1)           // for cache-busting (?v=N)
+  createdAt DateTime  @default(now())
+
+  @@index([type, isActive])
+}
+
+enum MediaType {
+  BACKGROUND
+  AVATAR
+  COVER
+  CV
+}
