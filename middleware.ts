@@ -29,6 +29,12 @@ export function middleware(req: NextRequest) {
     hostname === "admin.localhost";
 
   if (isAdminHost) {
+    // API routes must be served at their literal path on both hosts — do NOT
+    // rewrite them. Without this, /api/media/upload on the admin host becomes
+    // /admin/api/media/upload, which doesn't exist (405).
+    if (url.pathname.startsWith("/api/")) {
+      return NextResponse.next();
+    }
     // Avoid double-prefixing if the path already starts with /admin.
     if (!url.pathname.startsWith("/admin")) {
       url.pathname = `/admin${url.pathname}`;

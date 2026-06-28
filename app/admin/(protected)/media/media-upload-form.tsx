@@ -27,7 +27,14 @@ export function MediaUploadForm({ type }: { type: string }) {
     form.set("file", file);
 
     const res = await fetch("/api/media/upload", { method: "POST", body: form });
-    const data = await res.json();
+
+    let data: { error?: string; id?: string; url?: string } = {};
+    try {
+      data = await res.json();
+    } catch {
+      // Response body wasn't JSON (e.g. a hard crash before the handler ran).
+      data = { error: `Upload failed (HTTP ${res.status}).` };
+    }
 
     if (!res.ok) {
       setStatus("error");

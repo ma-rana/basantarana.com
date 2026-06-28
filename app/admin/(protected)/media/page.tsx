@@ -6,7 +6,7 @@
 
 import { requireAdmin } from "../../../../lib/auth/require-admin";
 import { db } from "../../../../lib/db";
-import { activateMediaAction, deleteMediaAction, addToSlotAction, removeFromSlotAction } from "./actions";
+import { activateMediaAction, deleteMediaAction, addToSlotAction, removeFromSlotAction, deactivateMediaAction } from "./actions";
 import { MediaUploadForm } from "./media-upload-form";
 import { MediaTabs } from "./media-tabs";
 
@@ -76,7 +76,12 @@ function AssetRow({
         )}
       </div>
       <div className="row-actions">
-        {!asset.isActive && (
+        {asset.isActive ? (
+          <form action={deactivateMediaAction}>
+            <input type="hidden" name="id" value={asset.id} />
+            <button type="submit" className="link-muted">Deactivate</button>
+          </form>
+        ) : (
           <form action={activateMediaAction}>
             <input type="hidden" name="id" value={asset.id} />
             <button type="submit" className="btn-primary">Activate</button>

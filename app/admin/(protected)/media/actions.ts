@@ -10,18 +10,26 @@ import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "../../../../lib/auth/require-admin";
 import { db } from "../../../../lib/db";
-import { setActiveMedia, addToNextSlot, removeFromSlot } from "../../../lib/media";
+import { setActiveMedia, activateMedia, deactivateMedia, addToNextSlot, removeFromSlot } from "../../../lib/media";
 
 export async function activateMediaAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = (formData.get("id") as string) || "";
   if (!id) return;
-  await setActiveMedia(id);
-  // Bump the version so themes get a fresh URL (?v=N) and browsers don't serve
-  // the previously-cached asset after switching. setActiveMedia doesn't do this.
-  await db.mediaAsset.update({ where: { id }, data: { version: { increment: 1 } } });
+  // activateMedia bumps version (cache-bust) and sets isActive: true.
+  // Does NOT deactivate others — multiple can be active simultaneously.
+  await activateMedia(id);
   revalidatePath("/admin/media");
-  revalidatePath("/"); // engine reads active media on every render
+  revalidatePath("/");
+}
+
+export async function deactivateMediaAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = (formData.get("id") as string) || "";
+  if (!id) return;
+  await deactivateMedia(id);
+  revalidatePath("/admin/media");
+  revalidatePath("/");
 }
 
 export async function deleteMediaAction(formData: FormData): Promise<void> {
