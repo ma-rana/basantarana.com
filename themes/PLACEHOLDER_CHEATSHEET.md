@@ -29,7 +29,54 @@ Optional — wrap in {% if %}. Unset values are null (correctly falsy).
 {% if profile.background %}<div style="background-image:url('{{ profile.background }}')">{% endif %}
 {% if profile.cover %}<img src="{{ profile.cover }}">{% endif %}
 {% if profile.cv %}<a href="{{ profile.cv }}" download>Download CV</a>{% endif %}
+{% if profile.video_background %}<video autoplay muted loop playsinline src="{{ profile.video_background }}"></video>{% endif %}
 ```
+
+Video and image backgrounds are independent. A theme can offer a video with an
+image fallback for browsers that block autoplay:
+```liquid
+{% if profile.video_background %}
+  <video autoplay muted loop playsinline src="{{ profile.video_background }}"></video>
+{% elsif profile.background %}
+  <div style="background-image:url('{{ profile.background }}')"></div>
+{% endif %}
+```
+
+## Named slots (multiple assets of the same type)
+In the admin, any asset can be assigned a numbered slot. Slotted assets get
+predictable placeholder names themes can reference independently on different
+parts of a page.
+
+| Admin group       | Slot placeholders         | List placeholder        |
+|-------------------|---------------------------|-------------------------|
+| Avatar / Photos   | `{{ profile.image1 }}`… | `{{ profile.images }}`  |
+| Cover             | `{{ profile.cover1 }}`…  | `{{ profile.covers }}`  |
+| Background image  | `{{ profile.background1 }}`… | `{{ profile.backgrounds }}` |
+| Video background  | `{{ profile.video1 }}`…  | `{{ profile.videos }}`  |
+
+Slot numbers follow upload order (1, 2, 3…) and are set in the admin with the
+“+ Slot” button per asset. Slots coexist with the single-active system —
+`{{ profile.avatar }}` and `{{ profile.image1 }}` can point to different assets.
+
+Example — hero uses slot 1, about section uses slot 2:
+```liquid
+<section class="hero">
+  {% if profile.image1 %}<img src="{{ profile.image1 }}">{% endif %}
+</section>
+<section class="about">
+  {% if profile.image2 %}<img src="{{ profile.image2 }}">{% endif %}
+</section>
+```
+
+Loop over all slotted images:
+```liquid
+{% for img in profile.images %}
+  <img src="{{ img }}">
+{% endfor %}
+```
+
+Slots that haven’t been filled are null (falsy), so `{% if profile.image3 %}` hides
+correctly if only two images are slotted.
 
 ## Projects (a list — loop over it). PUBLISHED only; drafts never appear.
 ```liquid

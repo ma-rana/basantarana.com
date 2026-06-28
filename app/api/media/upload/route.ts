@@ -12,12 +12,14 @@ import sharp from "sharp";
 import { getCurrentSession } from "../../../../lib/auth/cookies";
 import { db } from "../../../../lib/db";
 
-// Max sizes: 10 MB for images, 20 MB for PDFs.
+// Max sizes: 10 MB for images, 20 MB for PDFs, 100 MB for videos.
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_PDF_BYTES = 20 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 
 // Allowed MIME types per media type.
 const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"]);
+const VIDEO_MIMES = new Set(["video/mp4", "video/webm", "video/ogg"]);
 const PDF_MIME = "application/pdf";
 
 // Max output dimensions for images (longest edge). Keeps files small on the
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
   const file = formData.get("file");
 
   // Validate media type.
-  const validTypes = ["AVATAR", "BACKGROUND", "COVER", "CV"];
+  const validTypes = ["AVATAR", "BACKGROUND", "COVER", "CV", "VIDEO_BACKGROUND"];
   if (!validTypes.includes(type)) {
     return NextResponse.json({ error: "Invalid media type." }, { status: 400 });
   }
@@ -52,6 +54,7 @@ export async function POST(req: NextRequest) {
   }
 
   const isCV = type === "CV";
+  const isVideo = type === "VIDEO_BACKGROUND";
   const mime = file.type;
 
   if (isCV) {
@@ -60,6 +63,16 @@ export async function POST(req: NextRequest) {
     }
     if (file.size > MAX_PDF_BYTES) {
       return NextResponse.json({ error: "PDF too large (max 20 MB)." }, { status: 400 });
+    }
+  } else if (isVideo) {
+    if (!VIDEO_MIMES.has(mime)) {
+      return NextResponse.json(
+        { error: "Video must be MP4, WebM, or Ogg." },
+        { status: 400 },
+      );
+    }
+    if (file.size > MAX_VIDEO_BYTES) {
+      return NextResponse.json({ error: "Video too large (max 100 MB)." }, { status: 400 });
     }
   } else {
     if (!IMAGE_MIMES.has(mime)) {
@@ -84,6 +97,12 @@ export async function POST(req: NextRequest) {
     // PDFs stored as-is.
     filename = `${randomUUID()}.pdf`;
     outputBuffer = bytes;
+  } else if (isVideo) {
+    // Videos stored as-is — no compression (sharp is for images only).
+    // Preserve the original extension (.mp4, .webm, .ogg).
+    const ext = mime === "video/webm" ? ".webm" : mime === "video/ogg" ? ".ogg" : ".mp4";
+    filename = `${randomUUID()}${ext}`;
+    outputBuffer = bytes;
   } else if (mime === "image/svg+xml") {
     // SVGs stored as-is (sharp can't meaningfully process them).
     filename = `${randomUUID()}.svg`;
@@ -105,7 +124,7 @@ export async function POST(req: NextRequest) {
 
   const asset = await db.mediaAsset.create({
     data: {
-      type: type as "AVATAR" | "BACKGROUND" | "COVER" | "CV",
+      type: type as "AVATAR" | "BACKGROUND" | "COVER" | "CV" | "VIDEO_BACKGROUND",
       url,
       filename: file.name,
       isActive: false,

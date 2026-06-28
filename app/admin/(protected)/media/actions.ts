@@ -10,7 +10,7 @@ import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "../../../../lib/auth/require-admin";
 import { db } from "../../../../lib/db";
-import { setActiveMedia } from "../../../lib/media";
+import { setActiveMedia, addToNextSlot, removeFromSlot } from "../../../lib/media";
 
 export async function activateMediaAction(formData: FormData): Promise<void> {
   await requireAdmin();
@@ -38,6 +38,27 @@ export async function deleteMediaAction(formData: FormData): Promise<void> {
   await fs.rm(filePath, { force: true }).catch(() => {});
 
   await db.mediaAsset.delete({ where: { id } });
+  revalidatePath("/admin/media");
+  revalidatePath("/");
+}
+
+// Add this asset to the next available slot for its type.
+// If it's already slotted, this is a no-op.
+export async function addToSlotAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = (formData.get("id") as string) || "";
+  if (!id) return;
+  await addToNextSlot(id);
+  revalidatePath("/admin/media");
+  revalidatePath("/");
+}
+
+// Remove this asset from its slot (back to library-only).
+export async function removeFromSlotAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = (formData.get("id") as string) || "";
+  if (!id) return;
+  await removeFromSlot(id);
   revalidatePath("/admin/media");
   revalidatePath("/");
 }

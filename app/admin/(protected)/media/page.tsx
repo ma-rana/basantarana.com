@@ -6,7 +6,7 @@
 
 import { requireAdmin } from "../../../../lib/auth/require-admin";
 import { db } from "../../../../lib/db";
-import { activateMediaAction, deleteMediaAction } from "./actions";
+import { activateMediaAction, deleteMediaAction, addToSlotAction, removeFromSlotAction } from "./actions";
 import { MediaUploadForm } from "./media-upload-form";
 import { MediaTabs } from "./media-tabs";
 
@@ -18,30 +18,80 @@ type Asset = {
   url: string;
   filename: string;
   isActive: boolean;
+  slotOrder: number | null;
   version: number;
 };
 
-function AssetRow({ asset, showImage }: { asset: Asset; showImage: boolean }) {
+// Slot-type prefix map (mirrors media.ts SLOT_TYPES).
+const SLOT_PREFIX: Record<string, string> = {
+  AVATAR:           "image",
+  COVER:            "cover",
+  BACKGROUND:       "background",
+  VIDEO_BACKGROUND: "video",
+};
+
+function AssetRow({
+  asset,
+  showImage,
+  slottable = true,
+}: {
+  asset: Asset;
+  showImage: boolean;
+  slottable?: boolean;
+}) {
+  const isVideo = asset.type === "VIDEO_BACKGROUND";
+  const prefix = SLOT_PREFIX[asset.type];
+  const slotLabel = asset.slotOrder != null && prefix
+    ? `${prefix}${asset.slotOrder}`
+    : null;
+
   return (
     <div className={`media-asset-row${asset.isActive ? " media-asset-active" : ""}`}>
       {showImage && (
         <div className="media-thumb-wrap">
-          <img
-            src={`${asset.url}?v=${asset.version}`}
-            alt={asset.filename}
-            className="media-thumb"
-          />
+          {isVideo ? (
+            <video
+              src={`${asset.url}?v=${asset.version}`}
+              className="media-thumb"
+              muted
+              playsInline
+              preload="metadata"
+            />
+          ) : (
+            <img
+              src={`${asset.url}?v=${asset.version}`}
+              alt={asset.filename}
+              className="media-thumb"
+            />
+          )}
         </div>
       )}
       <div className="media-asset-info">
         <span className="media-filename">{asset.filename}</span>
         {asset.isActive && <span className="badge badge-published">Active</span>}
+        {slotLabel && (
+          <span className="badge badge-slot" title={`{{ profile.${slotLabel} }}`}>
+            {`{{${slotLabel}}}`}
+          </span>
+        )}
       </div>
       <div className="row-actions">
         {!asset.isActive && (
           <form action={activateMediaAction}>
             <input type="hidden" name="id" value={asset.id} />
             <button type="submit" className="btn-primary">Activate</button>
+          </form>
+        )}
+        {slottable && asset.slotOrder == null && (
+          <form action={addToSlotAction}>
+            <input type="hidden" name="id" value={asset.id} />
+            <button type="submit" className="btn-secondary">+ Slot</button>
+          </form>
+        )}
+        {slottable && asset.slotOrder != null && (
+          <form action={removeFromSlotAction}>
+            <input type="hidden" name="id" value={asset.id} />
+            <button type="submit" className="link-muted">Remove from slot</button>
           </form>
         )}
         <form action={deleteMediaAction}>
@@ -59,12 +109,14 @@ function MediaGroup({
   assets,
   uploadType,
   showImage = true,
+  slottable = true,
 }: {
   label: string;
   hint: string;
   assets: Asset[];
   uploadType: string;
   showImage?: boolean;
+  slottable?: boolean;
 }) {
   return (
     <div className="media-group">
@@ -75,7 +127,7 @@ function MediaGroup({
       ) : (
         <div className="media-asset-list">
           {assets.map((a) => (
-            <AssetRow key={a.id} asset={a} showImage={showImage} />
+            <AssetRow key={a.id} asset={a} showImage={showImage} slottable={slottable} />
           ))}
         </div>
       )}
@@ -98,19 +150,20 @@ export default async function MediaPage() {
   const avatars     = byType("AVATAR");
   const covers      = byType("COVER");
   const backgrounds = byType("BACKGROUND");
+  const videoBackgrounds = byType("VIDEO_BACKGROUND");
   const cvs         = byType("CV");
 
   const photosPanel = (
     <div>
       <MediaGroup
         label="Avatar"
-        hint="Your profile photo. Shown where themes use {{ profile.avatar }}. JPEG, PNG, or WebP — compressed to 400 px WebP on upload."
+        hint="Your profile photo. Single-active: {{ profile.avatar }}. Use + Slot to also assign as image1, image2… for themes that reference multiple photos."
         assets={avatars}
         uploadType="AVATAR"
       />
       <MediaGroup
         label="Cover"
-        hint="A cover or hero image. Shown where themes use {{ profile.cover }}. Compressed to 1200 px WebP."
+        hint="A cover or hero image. Single-active: {{ profile.cover }}. Slot as cover1, cover2… for multi-cover themes."
         assets={covers}
         uploadType="COVER"
       />
@@ -118,21 +171,30 @@ export default async function MediaPage() {
   );
 
   const backgroundsPanel = (
-    <MediaGroup
-      label="Background"
-      hint="Full-bleed background image. Shown where themes use {{ profile.background }}. Compressed to 1600 px WebP."
-      assets={backgrounds}
-      uploadType="BACKGROUND"
-    />
+    <div>
+      <MediaGroup
+        label="Background image"
+        hint="Full-bleed static background. Single-active: {{ profile.background }}. Slot as background1, background2…"
+        assets={backgrounds}
+        uploadType="BACKGROUND"
+      />
+      <MediaGroup
+        label="Video background"
+        hint="Looping video background. Single-active: {{ profile.video_background }}. Slot as video1, video2… MP4, WebM, or Ogg — max 100 MB."
+        assets={videoBackgrounds}
+        uploadType="VIDEO_BACKGROUND"
+      />
+    </div>
   );
 
   const documentsPanel = (
     <MediaGroup
       label="CV / Résumé"
-      hint="Your CV. Shown where themes use {{ profile.cv }}. PDF only, stored as-is."
+      hint="Your CV. Single-active: {{ profile.cv }}. PDF only, stored as-is. Documents don’t use slots."
       assets={cvs}
       uploadType="CV"
       showImage={false}
+      slottable={false}
     />
   );
 

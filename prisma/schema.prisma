@@ -150,16 +150,22 @@ model ContactMessage {
 }
 
 // Media library: upload many per type, activate one. Same pattern as Theme.
+// slotOrder: when set, this asset is in use at that numbered position for its
+// type (image1, image2, cover1, video3, etc.). Null means in the library only.
+// Uniqueness of (type, slotOrder) is enforced in application code (not a DB
+// unique index) so we can swap slots atomically without constraint violations.
 model MediaAsset {
-  id        String    @id @default(cuid())
-  type      MediaType                       // BACKGROUND / AVATAR / COVER / CV
-  url       String                          // link to the stored file
-  filename  String                          // original name, for the admin list
-  isActive  Boolean   @default(false)       // one active per type
-  version   Int       @default(1)           // for cache-busting (?v=N)
-  createdAt DateTime  @default(now())
+  id         String    @id @default(cuid())
+  type       MediaType                       // BACKGROUND / AVATAR / COVER / CV / VIDEO_BACKGROUND
+  url        String                          // link to the stored file
+  filename   String                          // original name, for the admin list
+  isActive   Boolean   @default(false)       // one active per type (single-slot system)
+  slotOrder  Int?                            // numbered slot within type: 1=image1, 2=image2 …
+  version    Int       @default(1)           // for cache-busting (?v=N)
+  createdAt  DateTime  @default(now())
 
   @@index([type, isActive])
+  @@index([type, slotOrder])
 }
 
 enum MediaType {
@@ -167,4 +173,5 @@ enum MediaType {
   AVATAR
   COVER
   CV
+  VIDEO_BACKGROUND
 }

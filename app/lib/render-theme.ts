@@ -56,6 +56,15 @@ async function getSiteData() {
       background: media.background,
       cover: media.cover,
       cv: media.cv,
+      video_background: media.video_background,
+      // Named slots (image1, image2, cover1, video1, background1, …)
+      // and lists (images, covers, backgrounds, videos) — spread from media.
+      // Keys are dynamic so we can't list them statically here.
+      ...Object.fromEntries(
+        Object.entries(media).filter(([k]) =>
+          !["avatar","background","cover","cv","video_background"].includes(k)
+        )
+      ),
     },
     projects: projects.map((p) => {
       const m = (p.media as { thumbnail?: string; gallery?: string[] }) ?? {};

@@ -11,7 +11,8 @@ export function MediaUploadForm({ type }: { type: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isCV = type === "CV";
-  const accept = isCV ? ".pdf,application/pdf" : "image/*";
+  const isVideo = type === "VIDEO_BACKGROUND";
+  const accept = isCV ? ".pdf,application/pdf" : isVideo ? "video/mp4,video/webm,video/ogg" : "image/*";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
