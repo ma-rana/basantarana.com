@@ -55,10 +55,10 @@ export function ThemeUpload({
             {uploadedFiles.map((f) => (
               <li key={f}>
                 <code>{f}</code>
-                <form action={deleteThemeFileAction} style={{ display: "inline" }}>
+                <form action={deleteThemeFileAction} className="theme-file-delete">
                   <input type="hidden" name="key" value={themeKey} />
                   <input type="hidden" name="filename" value={f} />
-                  <button type="submit" className="link-danger" style={{ fontSize: "0.8rem", marginLeft: "0.5rem" }}>Delete</button>
+                  <button type="submit" className="btn-danger btn-sm">Delete</button>
                 </form>
               </li>
             ))}

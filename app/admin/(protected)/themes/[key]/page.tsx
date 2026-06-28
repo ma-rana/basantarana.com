@@ -34,7 +34,7 @@ export default async function ThemeFilesPage({
           <h1>{theme.name}</h1>
           <p className="row-sub">{theme.key} · uploaded theme</p>
         </div>
-        <Link href="/admin/themes">← All themes</Link>
+        <Link href="/admin/themes" className="btn-back">All themes</Link>
       </header>
 
       <p className="muted">
@@ -66,7 +66,7 @@ export default async function ThemeFilesPage({
 
         <form action={deleteThemeAction}>
           <input type="hidden" name="key" value={key} />
-          <button type="submit" className="link-danger">Delete theme</button>
+          <button type="submit" className="btn-danger">Delete theme</button>
         </form>
       </div>
     </section>

@@ -8,10 +8,13 @@
 // (protected) is a route group: the parentheses mean it does NOT add a URL
 // segment. So app/admin/(protected)/page.tsx is served at /admin, not
 // /admin/protected.
+//
+// Presentation + responsive nav live in AdminShell (client). This file stays a
+// server component so the auth check runs on the server before anything renders.
 
 import { requireAdmin } from "../../../lib/auth/require-admin";
 import { logoutAction } from "../actions";
-import Link from "next/link";
+import { AdminShell } from "./admin-shell";
 
 export default async function ProtectedAdminLayout({
   children,
@@ -21,25 +24,8 @@ export default async function ProtectedAdminLayout({
   const user = await requireAdmin(); // redirects to /admin/login if not authed
 
   return (
-    <div className="admin-shell">
-      <aside className="admin-nav">
-        <div className="admin-brand">Portfolio CMS</div>
-        <nav>
-          <Link href="/admin">Dashboard</Link>
-          <Link href="/admin/profile">Profile</Link>
-          <Link href="/admin/media">Media</Link>
-          <Link href="/admin/projects">Projects</Link>
-          <Link href="/admin/skills">Skills</Link>
-          <Link href="/admin/stats">Platform stats</Link>
-          <Link href="/admin/themes">Themes</Link>
-          <Link href="/admin/engagement">Engagement</Link>
-        </nav>
-        <form action={logoutAction} className="admin-logout">
-          <span className="admin-user">{user.email}</span>
-          <button type="submit">Sign out</button>
-        </form>
-      </aside>
-      <main className="admin-main">{children}</main>
-    </div>
+    <AdminShell userEmail={user.email} logoutAction={logoutAction}>
+      {children}
+    </AdminShell>
   );
 }

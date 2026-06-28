@@ -39,10 +39,10 @@ export default async function ProjectsPage() {
                 <td>{p.featured ? "★" : "—"}</td>
                 <td>{p.order}</td>
                 <td className="row-actions">
-                  <Link href={`/admin/projects/${p.id}`}>Edit</Link>
+                  <Link href={`/admin/projects/${p.id}`} className="btn-ghost btn-sm">Edit</Link>
                   <form action={deleteProjectAction}>
                     <input type="hidden" name="id" value={p.id} />
-                    <button type="submit" className="link-danger">Delete</button>
+                    <button type="submit" className="btn-danger btn-sm">Delete</button>
                   </form>
                 </td>
               </tr>

@@ -36,10 +36,10 @@ export default async function SkillsPage() {
                 <td>{s.level}</td>
                 <td>{s.order}</td>
                 <td className="row-actions">
-                  <Link href={`/admin/skills/${s.id}`}>Edit</Link>
+                  <Link href={`/admin/skills/${s.id}`} className="btn-ghost btn-sm">Edit</Link>
                   <form action={deleteSkillAction}>
                     <input type="hidden" name="id" value={s.id} />
-                    <button type="submit" className="link-danger">Delete</button>
+                    <button type="submit" className="btn-danger btn-sm">Delete</button>
                   </form>
                 </td>
               </tr>

@@ -2,17 +2,23 @@
 
 // MediaUploadForm — client component that POSTs to /api/media/upload,
 // then reloads the page so the new asset appears. One form per media type.
+//
+// The native file input is visually hidden and driven by a styled label/button
+// so the control matches the rest of the admin (the raw browser picker is the
+// one element that always looks unstyled). All upload logic is unchanged.
 
 import { useState, useRef } from "react";
 
 export function MediaUploadForm({ type }: { type: string }) {
   const [status, setStatus] = useState<"idle" | "uploading" | "ok" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [fileName, setFileName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isCV = type === "CV";
   const isVideo = type === "VIDEO_BACKGROUND";
   const accept = isCV ? ".pdf,application/pdf" : isVideo ? "video/mp4,video/webm,video/ogg" : "image/*";
+  const acceptHint = isCV ? "PDF" : isVideo ? "MP4, WebM, Ogg" : "JPG, PNG, WebP, GIF";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,18 +56,38 @@ export function MediaUploadForm({ type }: { type: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="media-upload-form">
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        className="media-upload-input"
-        onChange={() => { setStatus("idle"); setMessage(""); }}
-      />
-      <button type="submit" disabled={status === "uploading"} className="btn-secondary">
+      <label className="file-picker">
+        <input
+          ref={inputRef}
+          type="file"
+          accept={accept}
+          className="file-picker-input"
+          onChange={(e) => {
+            setStatus("idle");
+            setMessage("");
+            setFileName(e.target.files?.[0]?.name ?? "");
+          }}
+        />
+        <span className="file-picker-btn">Choose file</span>
+        <span className="file-picker-name" title={fileName || undefined}>
+          {fileName || `No file selected · ${acceptHint}`}
+        </span>
+      </label>
+
+      <button
+        type="submit"
+        disabled={status === "uploading" || !fileName}
+        className="btn-primary"
+      >
         {status === "uploading" ? "Uploading…" : "Upload"}
       </button>
-      {status === "error" && <span className="form-error" role="alert">{message}</span>}
-      {status === "ok"    && <span className="form-ok"    role="status">{message}</span>}
+
+      {status === "error" && (
+        <span className="form-error" role="alert">{message}</span>
+      )}
+      {status === "ok" && (
+        <span className="form-ok" role="status">{message}</span>
+      )}
     </form>
   );
 }

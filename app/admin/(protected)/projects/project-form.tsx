@@ -150,9 +150,9 @@ export function ProjectForm({
             <div className="block-head">
               <strong>{b.type}</strong>
               <div className="block-controls">
-                <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up">↑</button>
-                <button type="button" onClick={() => move(i, 1)} disabled={i === blocks.length - 1} aria-label="Move down">↓</button>
-                <button type="button" onClick={() => setBlocks(blocks.filter((_, j) => j !== i))} aria-label="Remove block">Remove</button>
+                <button type="button" className="btn-icon btn-sm" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up">↑</button>
+                <button type="button" className="btn-icon btn-sm" onClick={() => move(i, 1)} disabled={i === blocks.length - 1} aria-label="Move down">↓</button>
+                <button type="button" className="btn-ghost btn-sm" onClick={() => setBlocks(blocks.filter((_, j) => j !== i))} aria-label="Remove block">Remove</button>
               </div>
             </div>
 

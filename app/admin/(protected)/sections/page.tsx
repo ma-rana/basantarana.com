@@ -44,19 +44,19 @@ export default async function SectionsPage() {
                     <form action={moveSectionAction}>
                       <input type="hidden" name="id" value={s.id} />
                       <input type="hidden" name="direction" value="up" />
-                      <button type="submit" disabled={i === 0} aria-label={`Move ${meta.label} up`}>↑</button>
+                      <button type="submit" className="btn-secondary btn-icon btn-sm" disabled={i === 0} aria-label={`Move ${meta.label} up`}>↑</button>
                     </form>
                     <form action={moveSectionAction}>
                       <input type="hidden" name="id" value={s.id} />
                       <input type="hidden" name="direction" value="down" />
-                      <button type="submit" disabled={i === sections.length - 1} aria-label={`Move ${meta.label} down`}>↓</button>
+                      <button type="submit" className="btn-secondary btn-icon btn-sm" disabled={i === sections.length - 1} aria-label={`Move ${meta.label} down`}>↓</button>
                     </form>
                   </td>
                   <td className="row-actions">
                     <form action={toggleSectionAction}>
                       <input type="hidden" name="id" value={s.id} />
                       <input type="hidden" name="enabled" value={(!s.enabled).toString()} />
-                      <button type="submit" className={s.enabled ? "link-danger" : "btn-primary"}>
+                      <button type="submit" className={s.enabled ? "btn-ghost btn-sm" : "btn-secondary btn-sm"}>
                         {s.enabled ? "Hide" : "Enable"}
                       </button>
                     </form>
@@ -68,7 +68,7 @@ export default async function SectionsPage() {
         </table>
       )}
 
-      <p className="muted" style={{ marginTop: "1rem" }}>
+      <p className="muted table-footnote">
         Order and visibility apply to every theme — each renders these bands in its own style.
       </p>
     </section>

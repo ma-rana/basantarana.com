@@ -51,11 +51,11 @@ export default async function ThemesPage() {
                   ) : (
                     <form action={activateThemeAction}>
                       <input type="hidden" name="key" value={t.key} />
-                      <button type="submit" className="btn-primary">Activate</button>
+                      <button type="submit" className="btn-secondary btn-sm">Activate</button>
                     </form>
                   )}
                   {t.source === "uploaded" ? (
-                    <Link href={`/admin/themes/${t.key}`}>Edit files</Link>
+                    <Link href={`/admin/themes/${t.key}`} className="btn-ghost btn-sm">Edit files</Link>
                   ) : null}
                 </td>
               </tr>
@@ -64,13 +64,18 @@ export default async function ThemesPage() {
         </table>
       )}
 
-      <h2 style={{ marginTop: "2rem" }}>Create a theme</h2>
-      <p className="muted">
-        Make a new uploaded theme, then add its page files (layout, home, about,
-        contact, project) and a stylesheet. Files are Liquid templates — same
-        placeholders as the built-in themes (see the cheatsheet).
-      </p>
-      <CreateThemeForm />
+      <div className="panel">
+        <div className="panel-head">
+          <h2>Create a theme</h2>
+          <p>
+            Make a new uploaded theme, then add its page files (layout, home,
+            about, contact, project) and a stylesheet. Files are Liquid
+            templates — same placeholders as the built-in themes (see the
+            cheatsheet).
+          </p>
+        </div>
+        <CreateThemeForm />
+      </div>
     </section>
   );
 }

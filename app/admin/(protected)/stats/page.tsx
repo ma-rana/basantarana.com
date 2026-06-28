@@ -36,10 +36,10 @@ export default async function StatsPage() {
                 <td>{s.value.toLocaleString()}</td>
                 <td>{s.order}</td>
                 <td className="row-actions">
-                  <Link href={`/admin/stats/${s.id}`}>Edit</Link>
+                  <Link href={`/admin/stats/${s.id}`} className="btn-ghost btn-sm">Edit</Link>
                   <form action={deleteStatAction}>
                     <input type="hidden" name="id" value={s.id} />
-                    <button type="submit" className="link-danger">Delete</button>
+                    <button type="submit" className="btn-danger btn-sm">Delete</button>
                   </form>
                 </td>
               </tr>

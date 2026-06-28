@@ -25,280 +25,740 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* ---------- Admin area ---------- */
-/* Internal tooling: quiet, legible, out of the way. One accent for actions. */
+/* ============================================================================
+   Admin area — calm slate / neutral system
+   ----------------------------------------------------------------------------
+   Internal tooling: quiet, legible, out of the way. A single restrained accent
+   for actions and focus. Everything below is token-driven so the whole admin
+   re-themes from one block. Layout is mobile-first: a single column with an
+   off-canvas drawer, widening to a persistent sidebar on tablet/desktop.
+   ========================================================================== */
+.admin-shell,
+.login-screen {
+  /* Surfaces — slate, low-chroma, layered by elevation */
+  --adm-bg: #f7f8fa;
+  --adm-surface: #ffffff;
+  --adm-surface-2: #f1f3f6;
+  --adm-ink: #1f2733;
+  --adm-ink-soft: #5b6675;
+  --adm-ink-faint: #8a94a3;
+  --adm-line: #e3e7ed;
+  --adm-line-strong: #cdd4de;
+  /* Accent — muted slate-blue, used sparingly */
+  --adm-accent: #475569;
+  --adm-accent-strong: #334155;
+  --adm-accent-tint: #eef1f5;
+  --adm-focus: #2563eb;
+  /* Status */
+  --adm-danger: #c0392b;
+  --adm-ok: #2e7d4f;
+  --adm-warn: #b7791f;
+  /* Geometry */
+  --adm-radius: 10px;
+  --adm-radius-sm: 7px;
+  --adm-radius-pill: 999px;
+  --adm-shadow: 0 1px 2px rgba(16, 24, 40, 0.04),
+    0 4px 16px rgba(16, 24, 40, 0.05);
+  --adm-nav-w: 248px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-shell,
+  .login-screen {
+    --adm-bg: #0d1117;
+    --adm-surface: #161b22;
+    --adm-surface-2: #1c232c;
+    --adm-ink: #e6eaf0;
+    --adm-ink-soft: #aab3c0;
+    --adm-ink-faint: #79828f;
+    --adm-line: #262d36;
+    --adm-line-strong: #333c47;
+    --adm-accent: #94a3b8;
+    --adm-accent-strong: #cbd5e1;
+    --adm-accent-tint: #1e2630;
+    --adm-focus: #60a5fa;
+    --adm-danger: #f0857a;
+    --adm-ok: #6ee7a0;
+    --adm-warn: #e3b341;
+    --adm-shadow: 0 1px 2px rgba(0, 0, 0, 0.3),
+      0 4px 18px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* ---------- Shell layout (mobile-first) ---------- */
 .admin-shell {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "topbar"
+    "main";
   min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--adm-bg);
+  color: var(--adm-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+/* Mobile top bar — hidden once the sidebar is persistent */
+.admin-topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  background: var(--adm-surface);
+  border-bottom: 1px solid var(--adm-line);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+.admin-topbar-brand {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  font-size: 0.95rem;
+}
+.admin-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--adm-line-strong);
+  border-radius: var(--adm-radius-sm);
+  background: var(--adm-surface);
+  color: var(--adm-ink);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.admin-menu-btn:hover {
+  background: var(--adm-surface-2);
+}
+.admin-menu-icon {
+  position: relative;
+  width: 16px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+}
+.admin-menu-icon::before,
+.admin-menu-icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 16px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+}
+.admin-menu-icon::before { top: -5px; }
+.admin-menu-icon::after { top: 5px; }
+
+/* Scrim behind the drawer */
+.admin-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(16, 24, 40, 0.45);
+  border: 0;
+}
+.admin-scrim[hidden] { display: none; }
+
+/* Sidebar — drawer on mobile, column on larger screens */
 .admin-nav {
+  grid-area: nav;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding: 1.5rem 1.25rem;
-  border-right: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
+  padding: 1.25rem 1rem 1.1rem;
+  background: var(--adm-surface);
+  /* Off-canvas by default (mobile) */
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 50;
+  width: min(82vw, 300px);
+  transform: translateX(-100%);
+  transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid var(--adm-line);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.admin-shell[data-open="true"] .admin-nav {
+  transform: translateX(0);
+  box-shadow: var(--adm-shadow);
 }
 .admin-brand {
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  font-size: 1.05rem;
+  padding: 0.2rem 0.5rem;
+  color: var(--adm-ink);
 }
 .admin-nav nav {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.15rem;
 }
 .admin-nav nav a {
-  padding: 0.4rem 0.5rem;
-  border-radius: 6px;
-  color: inherit;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--adm-radius-sm);
+  color: var(--adm-ink-soft);
   text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.2;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 .admin-nav nav a:hover {
-  background: color-mix(in oklab, var(--foreground) 8%, transparent);
+  background: var(--adm-surface-2);
+  color: var(--adm-ink);
+}
+.admin-nav nav a[aria-current="page"] {
+  background: var(--adm-accent-tint);
+  color: var(--adm-accent-strong);
+  font-weight: 650;
+  box-shadow: inset 2px 0 0 var(--adm-accent);
 }
 .admin-logout {
   margin-top: auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--adm-line);
 }
 .admin-user {
-  font-size: 0.8rem;
-  opacity: 0.7;
+  font-size: 0.78rem;
+  color: var(--adm-ink-faint);
+  padding: 0 0.5rem;
+  word-break: break-all;
 }
 .admin-main {
-  padding: 2rem;
-}
-.dashboard-empty {
-  margin-top: 1rem;
-  opacity: 0.7;
-  max-width: 48ch;
+  grid-area: main;
+  padding: 1.25rem;
+  min-width: 0; /* let children shrink + tables scroll instead of overflowing */
 }
 
-/* Login screen */
+/* Tablet and up: persistent sidebar, no drawer, no top bar */
+@media (min-width: 768px) {
+  .admin-shell {
+    grid-template-columns: var(--adm-nav-w) 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: "nav main";
+  }
+  .admin-topbar,
+  .admin-scrim {
+    display: none;
+  }
+  .admin-nav {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    width: auto;
+    transform: none;
+    transition: none;
+    box-shadow: none;
+  }
+  .admin-main {
+    padding: 1.75rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .admin-shell {
+    --adm-nav-w: 264px;
+  }
+  .admin-main {
+    padding: 2.25rem 2.5rem;
+  }
+}
+
+/* Respect reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .admin-nav {
+    transition: none;
+  }
+}
+
+/* ---------- Dashboard ---------- */
+.dashboard {
+  max-width: 1100px;
+}
+.content-head h1,
+.dashboard h1 {
+  font-size: clamp(1.5rem, 1.2rem + 1.1vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--adm-ink);
+}
+.content-head p {
+  color: var(--adm-ink-soft);
+  margin: 0.3rem 0 1.5rem;
+  font-size: 0.92rem;
+}
+.content-head p strong { color: var(--adm-ink); font-weight: 650; }
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.9rem;
+  margin-top: 0.5rem;
+}
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.1rem 1.2rem;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--adm-shadow);
+  transition: border-color 0.14s ease, transform 0.14s ease;
+}
+.metric-card:hover {
+  border-color: var(--adm-line-strong);
+  transform: translateY(-1px);
+}
+.metric-value {
+  font-size: clamp(1.6rem, 1.3rem + 1vw, 2rem);
+  font-weight: 680;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--adm-ink);
+}
+.metric-label {
+  font-size: 0.8rem;
+  color: var(--adm-ink-soft);
+}
+.dashboard-subhead {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--adm-ink-faint);
+  margin: 2rem 0 0.75rem;
+  font-weight: 650;
+}
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.quick-action {
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--adm-radius-sm);
+  border: 1px solid var(--adm-line-strong);
+  background: var(--adm-surface);
+  color: var(--adm-ink);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 550;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.quick-action:hover {
+  background: var(--adm-accent-tint);
+  border-color: var(--adm-accent);
+}
+
+/* ---------- Login screen ---------- */
 .login-screen {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 1.5rem;
+  background: var(--adm-bg);
+  color: var(--adm-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 .login-card {
   width: 100%;
-  max-width: 360px;
-  padding: 2rem;
-  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
-  border-radius: 12px;
+  max-width: 380px;
+  padding: clamp(1.5rem, 1rem + 2vw, 2.25rem);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line);
+  border-radius: 14px;
+  box-shadow: var(--adm-shadow);
 }
 .login-card h1 {
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   font-weight: 700;
+  letter-spacing: -0.015em;
 }
 .login-sub {
-  margin: 0.25rem 0 1.5rem;
-  opacity: 0.7;
+  margin: 0.3rem 0 1.5rem;
+  color: var(--adm-ink-soft);
   font-size: 0.9rem;
 }
+
+/* ---------- Forms (shared) ---------- */
 .login-form,
 .field {
   display: flex;
   flex-direction: column;
 }
-.login-form {
-  gap: 1rem;
+.login-form { gap: 1rem; }
+.field { gap: 0.35rem; }
+.field span,
+.field > label > span {
+  font-size: 0.84rem;
+  color: var(--adm-ink-soft);
+  font-weight: 550;
 }
-.field {
-  gap: 0.35rem;
-}
-.field span {
-  font-size: 0.85rem;
-  opacity: 0.8;
-}
-.field input {
+.field input,
+.field select,
+.field textarea,
+.field input[type="number"],
+.content-form input,
+.content-form textarea,
+.content-form select {
+  width: 100%;
   padding: 0.6rem 0.7rem;
-  border-radius: 8px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 20%, transparent);
-  background: transparent;
-  color: inherit;
-  font-size: 1rem;
-}
-.field input:focus-visible {
-  outline: 2px solid #4f46e5;
-  outline-offset: 1px;
-}
-.login-form button,
-.admin-logout button {
-  padding: 0.6rem 0.8rem;
-  border-radius: 8px;
-  border: none;
-  background: #4f46e5;
-  color: #fff;
+  border-radius: var(--adm-radius-sm);
+  border: 1px solid var(--adm-line-strong);
+  background: var(--adm-surface);
+  color: var(--adm-ink);
+  font: inherit;
   font-size: 0.95rem;
-  cursor: pointer;
 }
-.login-form button:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-.form-error {
-  color: #dc2626;
-  font-size: 0.85rem;
-  margin: -0.25rem 0 0;
-}
-@media (max-width: 640px) {
-  .admin-shell {
-    grid-template-columns: 1fr;
-  }
-  .admin-nav {
-    border-right: none;
-    border-bottom: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
-  }
+.field textarea,
+.content-form textarea { resize: vertical; min-height: 5rem; }
+.field input::placeholder,
+.content-form input::placeholder,
+.content-form textarea::placeholder { color: var(--adm-ink-faint); }
+
+/* One consistent focus ring everywhere */
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible,
+.content-form input:focus-visible,
+.content-form textarea:focus-visible,
+.content-form select:focus-visible,
+.tag-add input:focus-visible,
+.block-editor input:focus-visible,
+.block-editor textarea:focus-visible,
+.block-editor select:focus-visible,
+.admin-menu-btn:focus-visible,
+.media-tab:focus-visible,
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--adm-focus);
+  outline-offset: 2px;
 }
 
-/* Content editor pages (profile, projects, ...) */
-.content-page {
-  max-width: 640px;
+.field small { color: var(--adm-ink-faint); font-weight: 400; }
+.field-error,
+.form-error {
+  color: var(--adm-danger);
+  font-size: 0.82rem;
+  font-style: normal;
+  margin: 0;
 }
-.content-head h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
+.form-ok { color: var(--adm-ok); font-size: 0.9rem; }
+
+/* ============================================================================
+   Button & link system
+   ----------------------------------------------------------------------------
+   One base (.btn) with variants and sizes. Hierarchy by visual weight:
+     .btn-primary  filled accent     one main action per view (Save, Create)
+     .btn-secondary outlined neutral  secondary actions (Add, + Slot)
+     .btn-ghost    quiet neutral     low-stakes row actions (Edit)
+     .btn-danger   outlined danger   destructive, but contained
+   Plus .btn-sm / .btn-icon sizes, .btn-back for back-links, and the legacy
+   inline link styles (.link-danger / .link-muted) kept for text-button spots.
+   ========================================================================== */
+.btn,
+.login-form button,
+.admin-logout button,
+.content-form button,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--adm-radius-sm);
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.1;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.13s ease, border-color 0.13s ease, color 0.13s ease;
 }
-.content-head p {
-  opacity: 0.7;
-  margin: 0.25rem 0 1.5rem;
-  font-size: 0.9rem;
+
+/* Primary — filled accent */
+.login-form button,
+.admin-logout button,
+.content-form button,
+.btn-primary {
+  background: var(--adm-accent-strong);
+  color: #fff;
 }
+.login-form button:hover,
+.admin-logout button:hover,
+.content-form button:hover,
+.btn-primary:hover {
+  background: var(--adm-accent);
+}
+
+/* Secondary — outlined neutral */
+.btn-secondary {
+  background: var(--adm-surface);
+  border-color: var(--adm-line-strong);
+  color: var(--adm-ink);
+}
+.btn-secondary:hover {
+  background: var(--adm-surface-2);
+  border-color: var(--adm-accent);
+}
+
+/* Ghost — quiet neutral, for safe in-row actions like Edit */
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--adm-ink-soft);
+  font-weight: 600;
+}
+.btn-ghost:hover {
+  background: var(--adm-surface-2);
+  color: var(--adm-ink);
+}
+
+/* Danger — destructive, outlined so it reads as caution, fills on hover */
+.btn-danger {
+  background: transparent;
+  border-color: color-mix(in oklab, var(--adm-danger) 35%, transparent);
+  color: var(--adm-danger);
+}
+.btn-danger:hover {
+  background: color-mix(in oklab, var(--adm-danger) 12%, transparent);
+  border-color: var(--adm-danger);
+}
+
+/* Sizes */
+.btn-sm {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.82rem;
+}
+.btn-icon {
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.95rem;
+}
+.btn-icon.btn-sm {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.85rem;
+}
+
+/* Disabled — shared across every variant */
+.login-form button:disabled,
+.content-form button:disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-ghost:disabled,
+.btn-danger:disabled,
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+.content-form button { align-self: flex-start; }
+
+/* Back link — a recognizable "return" affordance for detail pages */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--adm-ink-soft);
+  text-decoration: none;
+  font-size: 0.86rem;
+  font-weight: 550;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--adm-radius-sm);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.btn-back:hover {
+  background: var(--adm-surface-2);
+  color: var(--adm-ink);
+}
+.btn-back::before { content: "\2190"; font-size: 1em; }
+
+/* ---------- Content editor pages ---------- */
+.content-page { max-width: 680px; }
+.content-page.wide { max-width: 960px; }
 .content-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
-.content-form textarea {
-  padding: 0.6rem 0.7rem;
-  border-radius: 8px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 20%, transparent);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  resize: vertical;
+.content-form.form-narrow { max-width: 480px; }
+
+/* Per-field helper text + the live folder preview chip */
+.field-hint {
+  color: var(--adm-ink-faint);
+  font-size: 0.78rem;
+  line-height: 1.4;
 }
-.content-form textarea:focus-visible,
-.content-form input:focus-visible {
-  outline: 2px solid #4f46e5;
-  outline-offset: 1px;
-}
-.field small {
-  opacity: 0.6;
-  font-weight: 400;
-}
-.field-group {
-  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
-  border-radius: 10px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.field-group legend {
-  padding: 0 0.4rem;
-  font-size: 0.85rem;
-  opacity: 0.8;
-}
-.field-error {
-  color: #dc2626;
-  font-size: 0.8rem;
-  font-style: normal;
-}
-.form-ok {
-  color: #16a34a;
-  font-size: 0.9rem;
-}
-.content-form button {
-  align-self: flex-start;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  border: none;
-  background: #4f46e5;
-  color: #fff;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-.content-form button:disabled {
-  opacity: 0.6;
-  cursor: default;
+.field-code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.76rem;
+  padding: 0.06rem 0.32rem;
+  border-radius: 5px;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line);
+  color: var(--adm-ink-soft);
 }
 
-/* Projects: list, badges, tags, block editor */
-.content-page.wide {
-  max-width: 900px;
+/* Validity affordance: green edge when a field is touched-and-valid,
+   red edge when it carries an error (paired with aria-invalid). */
+.content-form input[aria-invalid="true"],
+.field input[aria-invalid="true"] {
+  border-color: var(--adm-danger);
+}
+.content-form input[aria-invalid="true"]:focus-visible,
+.field input[aria-invalid="true"]:focus-visible {
+  outline-color: var(--adm-danger);
 }
 .content-head.row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
 }
-.btn-primary {
-  flex-shrink: 0;
-  padding: 0.5rem 0.9rem;
-  border-radius: 8px;
-  background: #4f46e5;
-  color: #fff;
-  text-decoration: none;
-  font-size: 0.9rem;
+.btn-primary { flex-shrink: 0; }
+.muted { color: var(--adm-ink-faint); }
+
+/* ---------- Panel ---------- */
+/* A bordered section used to set apart a distinct task on a page — e.g. the
+   "Create a theme" block below the themes table. Replaces ad-hoc h2 +
+   inline-margin patterns so secondary sections read as deliberate cards. */
+.panel {
+  margin-top: 2rem;
+  padding: clamp(1.1rem, 0.8rem + 1.2vw, 1.6rem);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  box-shadow: var(--adm-shadow);
 }
-.muted {
-  opacity: 0.6;
+.panel-head { margin-bottom: 1.1rem; }
+.panel-head h2 {
+  font-size: 1.05rem;
+  font-weight: 680;
+  letter-spacing: -0.01em;
+  color: var(--adm-ink);
 }
+.panel-head p {
+  margin: 0.3rem 0 0;
+  color: var(--adm-ink-soft);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+.field-group {
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--adm-surface);
+}
+.field-group legend {
+  padding: 0 0.4rem;
+  font-size: 0.84rem;
+  color: var(--adm-ink-soft);
+  font-weight: 600;
+}
+.field-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: start;
+}
+.field-row .field { flex: 1; min-width: 140px; }
+/* In a multi-column row, every label is a single line, so inputs align on the
+   same baseline. The descriptor/hint sits BELOW the input (.field-hint), which
+   keeps the controls aligned regardless of hint length. */
+.field.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.45rem;
+}
+.field.checkbox input { width: auto; }
+
+/* ---------- Data tables ---------- */
+/* Wrapped in horizontal scroll on small screens so columns never overflow. */
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  overflow: hidden;
 }
 .data-table th,
 .data-table td {
   text-align: left;
-  padding: 0.6rem 0.5rem;
-  border-bottom: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+  padding: 0.7rem 0.8rem;
+  border-bottom: 1px solid var(--adm-line);
   vertical-align: top;
 }
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--adm-surface-2); }
 .data-table th {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  opacity: 0.6;
+  letter-spacing: 0.05em;
+  color: var(--adm-ink-faint);
+  font-weight: 650;
+  background: var(--adm-surface-2);
 }
 .data-table a {
-  color: inherit;
+  color: var(--adm-ink);
   font-weight: 600;
   text-decoration: none;
 }
-.data-table a:hover {
-  text-decoration: underline;
-}
+.data-table a:hover { text-decoration: underline; }
 .row-sub {
   display: block;
   font-size: 0.78rem;
-  opacity: 0.55;
+  color: var(--adm-ink-faint);
   font-weight: 400;
 }
 .row-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
 }
+.table-footnote { margin-top: 1rem; font-size: 0.85rem; }
 .link-danger {
   background: none;
   border: none;
-  color: #dc2626;
+  color: var(--adm-danger);
   cursor: pointer;
   font: inherit;
+  font-weight: 550;
   padding: 0;
 }
+.link-danger:hover { text-decoration: underline; }
 .link-muted {
   background: none;
   border: none;
-  opacity: 0.55;
+  color: var(--adm-ink-faint);
   cursor: pointer;
   font: inherit;
   font-size: 0.85rem;
@@ -306,131 +766,136 @@ body {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* ---------- Badges ---------- */
 .badge {
   display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 600;
+  padding: 0.18rem 0.55rem;
+  border-radius: var(--adm-radius-pill);
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
 }
-.badge-draft { background: color-mix(in oklab, #9ca3af 30%, transparent); }
-.badge-published { background: color-mix(in oklab, #16a34a 35%, transparent); }
-.badge-archived { background: color-mix(in oklab, #f59e0b 30%, transparent); }
+.badge-draft {
+  background: var(--adm-surface-2);
+  color: var(--adm-ink-soft);
+  border: 1px solid var(--adm-line-strong);
+}
+.badge-published {
+  background: color-mix(in oklab, var(--adm-ok) 16%, transparent);
+  color: var(--adm-ok);
+}
+.badge-archived {
+  background: color-mix(in oklab, var(--adm-warn) 16%, transparent);
+  color: var(--adm-warn);
+}
 .badge-slot {
-  background: color-mix(in oklab, #6366f1 25%, transparent);
-  font-family: monospace;
+  background: var(--adm-accent-tint);
+  color: var(--adm-accent-strong);
+  font-family: var(--font-mono), monospace;
   font-size: 0.68rem;
   cursor: default;
 }
-.field-row {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.field-row .field {
-  flex: 1;
-  min-width: 120px;
-}
-.field.checkbox {
-  flex-direction: row;
-  align-items: center;
-  gap: 0.4rem;
-}
-.field select,
-.field input[type="number"] {
-  padding: 0.55rem 0.6rem;
-  border-radius: 8px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 20%, transparent);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-}
-.tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
+
+/* ---------- Tags ---------- */
+.tag-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .tag-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--foreground) 10%, transparent);
+  padding: 0.22rem 0.55rem;
+  border-radius: var(--adm-radius-pill);
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line);
   font-size: 0.82rem;
 }
 .tag-chip button {
   background: none;
   border: none;
-  color: inherit;
+  color: var(--adm-ink-faint);
   cursor: pointer;
   font-size: 1rem;
   line-height: 1;
   padding: 0;
 }
-.tag-add {
-  display: flex;
-  gap: 0.5rem;
-}
+.tag-chip button:hover { color: var(--adm-danger); }
+.tag-add { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.tag-add input { flex: 1; min-width: 140px; }
 .tag-add input {
-  flex: 1;
   padding: 0.5rem 0.6rem;
-  border-radius: 8px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 20%, transparent);
-  background: transparent;
-  color: inherit;
+  border-radius: var(--adm-radius-sm);
+  border: 1px solid var(--adm-line-strong);
+  background: var(--adm-surface);
+  color: var(--adm-ink);
 }
+
+/* Inline editor buttons (tag add, block add, block reorder controls).
+   These layer on top of .btn-secondary in markup, or stand alone here. */
 .tag-add button,
 .block-add button,
 .block-controls button {
   padding: 0.4rem 0.7rem;
-  border-radius: 7px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 20%, transparent);
-  background: transparent;
-  color: inherit;
+  border-radius: var(--adm-radius-sm);
+  border: 1px solid var(--adm-line-strong);
+  background: var(--adm-surface);
+  color: var(--adm-ink);
   cursor: pointer;
-  font-size: 0.85rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 550;
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
+.tag-add button:hover,
+.block-add button:hover,
+.block-controls button:hover {
+  background: var(--adm-surface-2);
+  border-color: var(--adm-accent);
+}
+.block-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+/* When block controls use the shared button variants, let those win over the
+   generic .block-controls button sizing above. */
+.block-controls .btn-icon { padding: 0; }
+.block-controls .btn-ghost { border-color: transparent; }
+
+/* ---------- Block editor ---------- */
 .block-editor {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border: 1px solid color-mix(in oklab, var(--foreground) 14%, transparent);
-  border-radius: 8px;
+  gap: 0.55rem;
+  padding: 0.85rem;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius-sm);
+  background: var(--adm-surface);
 }
 .block-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
 }
 .block-head strong {
   text-transform: uppercase;
-  font-size: 0.72rem;
-  letter-spacing: 0.05em;
-  opacity: 0.7;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--adm-ink-faint);
 }
-.block-controls {
-  display: flex;
-  gap: 0.3rem;
-}
+.block-controls { display: flex; gap: 0.3rem; }
 .block-editor input,
 .block-editor textarea,
 .block-editor select {
   padding: 0.5rem 0.6rem;
-  border-radius: 7px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 20%, transparent);
-  background: transparent;
-  color: inherit;
+  border-radius: var(--adm-radius-sm);
+  border: 1px solid var(--adm-line-strong);
+  background: var(--adm-surface);
+  color: var(--adm-ink);
   font: inherit;
 }
-.block-add {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
+.block-add { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 
-/* Engagement dashboard cards */
+/* ---------- Stat / engagement cards ---------- */
 .stat-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -438,27 +903,26 @@ body {
   margin-top: 1rem;
 }
 .stat-card {
-  border: 1px solid color-mix(in oklab, var(--foreground) 15%, transparent);
-  border-radius: 10px;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
   padding: 1.1rem 1.2rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  background: var(--adm-surface);
+  box-shadow: var(--adm-shadow);
 }
 .stat-card-value {
-  font-size: 1.9rem;
-  font-weight: 600;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 1.9rem);
+  font-weight: 680;
   line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--adm-ink);
 }
-.stat-card-label {
-  font-size: 0.8rem;
-  opacity: 0.7;
-}
+.stat-card-label { font-size: 0.8rem; color: var(--adm-ink-soft); }
 
-/* Theme file upload (single multi-file area) */
-.theme-upload {
-  margin: 1.2rem 0 0.75rem;
-}
+/* ---------- Theme upload ---------- */
+.theme-upload { margin: 1.2rem 0 0.75rem; }
 .theme-upload-form {
   display: flex;
   align-items: center;
@@ -472,24 +936,19 @@ body {
   flex-direction: column;
   gap: 0.5rem;
   padding: 1.1rem 1.2rem;
-  border: 1px dashed color-mix(in oklab, var(--foreground) 28%, transparent);
-  border-radius: 10px;
+  border: 1px dashed var(--adm-line-strong);
+  border-radius: var(--adm-radius);
+  background: var(--adm-surface);
   cursor: pointer;
+  transition: border-color 0.14s ease, background 0.14s ease;
 }
 .theme-upload-drop:hover {
-  border-color: color-mix(in oklab, var(--foreground) 45%, transparent);
+  border-color: var(--adm-accent);
+  background: var(--adm-accent-tint);
 }
-.theme-upload-drop input[type="file"] {
-  font-size: 0.85rem;
-}
-.theme-upload-prompt {
-  font-size: 0.82rem;
-  opacity: 0.7;
-}
-.theme-upload-status {
-  margin-top: 0.9rem;
-  font-size: 0.9rem;
-}
+.theme-upload-drop input[type="file"] { font-size: 0.85rem; }
+.theme-upload-prompt { font-size: 0.82rem; color: var(--adm-ink-soft); }
+.theme-upload-status { margin-top: 0.9rem; font-size: 0.9rem; }
 .theme-upload-file-list {
   list-style: none;
   padding: 0;
@@ -498,30 +957,18 @@ body {
   flex-direction: column;
   gap: 0.25rem;
 }
-.theme-upload-file-list li {
-  display: flex;
-  align-items: center;
-}
-.theme-upload-label {
-  opacity: 0.7;
-}
+.theme-upload-file-list li { display: flex; align-items: center; gap: 0.5rem; }
+.theme-file-delete { display: inline-flex; margin-left: auto; }
+.theme-upload-label { color: var(--adm-ink-soft); }
 .theme-upload-rejected {
   margin: 0.5rem 0 0;
   padding-left: 1.1rem;
-  color: #dc2626;
+  color: var(--adm-danger);
   font-size: 0.85rem;
 }
-.theme-upload-rejected li {
-  margin: 0.15rem 0;
-}
-.theme-upload-hint {
-  font-size: 0.82rem;
-  margin-top: 0.5rem;
-}
-.upload-note {
-  font-size: 0.82rem;
-  margin-bottom: 0.5rem;
-}
+.theme-upload-rejected li { margin: 0.15rem 0; }
+.theme-upload-hint { font-size: 0.82rem; margin-top: 0.5rem; color: var(--adm-ink-soft); }
+.upload-note { font-size: 0.82rem; margin-bottom: 0.5rem; color: var(--adm-ink-soft); }
 .theme-actions {
   display: flex;
   align-items: center;
@@ -530,75 +977,109 @@ body {
   flex-wrap: wrap;
 }
 
-/* Media admin */
+/* ---------- Media admin ---------- */
 .media-tabs {
   display: flex;
   gap: 0.25rem;
-  border-bottom: 2px solid color-mix(in oklab, var(--foreground) 12%, transparent);
+  border-bottom: 2px solid var(--adm-line);
   margin-bottom: 1.5rem;
+  overflow-x: auto;
 }
 .media-tab {
-  padding: 0.45rem 1rem;
+  padding: 0.5rem 1rem;
   border: none;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   background: transparent;
-  color: inherit;
+  color: var(--adm-ink-soft);
   font: inherit;
   font-size: 0.9rem;
+  font-weight: 550;
   cursor: pointer;
-  opacity: 0.6;
-  border-radius: 6px 6px 0 0;
+  white-space: nowrap;
+  border-radius: var(--adm-radius-sm) var(--adm-radius-sm) 0 0;
 }
-.media-tab:hover { opacity: 0.85; }
+.media-tab:hover { color: var(--adm-ink); background: var(--adm-surface-2); }
 .media-tab-active {
-  opacity: 1;
-  font-weight: 600;
-  border-bottom-color: #4f46e5;
+  color: var(--adm-accent-strong);
+  font-weight: 650;
+  border-bottom-color: var(--adm-accent);
 }
-.media-panel {
-  outline: none;
-}
+.media-panel { outline: none; }
+.media-panel[hidden] { display: none; }
+/* Stack multiple groups within a panel with consistent spacing. */
+.media-panel > div { display: flex; flex-direction: column; gap: 1.25rem; }
 .media-group {
-  margin-bottom: 2.5rem;
+  padding: clamp(1rem, 0.8rem + 0.8vw, 1.4rem);
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  box-shadow: var(--adm-shadow);
+}
+.media-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 .media-group-title {
   font-size: 1rem;
+  font-weight: 680;
+  color: var(--adm-ink);
+  letter-spacing: -0.01em;
+}
+.media-group-count {
+  font-size: 0.74rem;
   font-weight: 600;
-  margin-bottom: 0.2rem;
+  color: var(--adm-ink-faint);
+  padding: 0.12rem 0.5rem;
+  border-radius: var(--adm-radius-pill);
+  background: var(--adm-surface-2);
+  white-space: nowrap;
+}
+.media-group-hint {
+  margin: 0.25rem 0 1rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--adm-ink-soft);
+  max-width: 70ch;
+}
+.media-empty {
+  margin: 0 0 1rem;
+  padding: 1.1rem;
+  border: 1px dashed var(--adm-line-strong);
+  border-radius: var(--adm-radius-sm);
+  color: var(--adm-ink-faint);
+  font-size: 0.85rem;
+  text-align: center;
 }
 .media-asset-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
-  border-radius: 10px;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius-sm);
   overflow: hidden;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  background: var(--adm-surface);
 }
 .media-asset-row {
   display: flex;
   align-items: center;
   gap: 0.9rem;
-  padding: 0.6rem 0.9rem;
-  border-bottom: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+  padding: 0.65rem 0.9rem;
+  border-bottom: 1px solid var(--adm-line);
 }
 .media-asset-row:last-child { border-bottom: none; }
-.media-asset-active { background: color-mix(in oklab, #4f46e5 6%, transparent); }
+.media-asset-active { background: var(--adm-accent-tint); }
 .media-thumb-wrap {
   flex-shrink: 0;
   width: 48px;
   height: 48px;
-  border-radius: 6px;
+  border-radius: var(--adm-radius-sm);
   overflow: hidden;
-  background: color-mix(in oklab, var(--foreground) 8%, transparent);
+  background: var(--adm-surface-2);
 }
-.media-thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+.media-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
 .media-asset-info {
   flex: 1;
   display: flex;
@@ -614,6 +1095,8 @@ body {
 }
 .media-upload-area {
   margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--adm-line);
 }
 .media-upload-form {
   display: flex;
@@ -621,19 +1104,56 @@ body {
   gap: 0.6rem;
   flex-wrap: wrap;
 }
-.media-upload-input {
+
+/* Styled file picker — visually hides the native input and drives it through a
+   label so it matches the rest of the admin. */
+.file-picker {
+  display: inline-flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 220px;
+  border: 1px solid var(--adm-line-strong);
+  border-radius: var(--adm-radius-sm);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--adm-surface);
+}
+.file-picker:hover { border-color: var(--adm-accent); }
+.file-picker:focus-within {
+  outline: 2px solid var(--adm-focus);
+  outline-offset: 2px;
+}
+.file-picker-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.file-picker-btn {
+  flex-shrink: 0;
+  padding: 0.5rem 0.85rem;
+  background: var(--adm-surface-2);
+  border-right: 1px solid var(--adm-line-strong);
   font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--adm-ink);
+  white-space: nowrap;
+}
+.file-picker-name {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.84rem;
+  color: var(--adm-ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.btn-secondary {
-  flex-shrink: 0;
-  padding: 0.4rem 0.85rem;
-  border-radius: 8px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 22%, transparent);
-  background: transparent;
-  color: inherit;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-.btn-secondary:disabled { opacity: 0.6; cursor: default; }
+.media-upload-input { font-size: 0.85rem; flex: 1; min-width: 0; }

@@ -79,29 +79,29 @@ function AssetRow({
         {asset.isActive ? (
           <form action={deactivateMediaAction}>
             <input type="hidden" name="id" value={asset.id} />
-            <button type="submit" className="link-muted">Deactivate</button>
+            <button type="submit" className="btn-ghost btn-sm">Deactivate</button>
           </form>
         ) : (
           <form action={activateMediaAction}>
             <input type="hidden" name="id" value={asset.id} />
-            <button type="submit" className="btn-primary">Activate</button>
+            <button type="submit" className="btn-secondary btn-sm">Activate</button>
           </form>
         )}
         {slottable && asset.slotOrder == null && (
           <form action={addToSlotAction}>
             <input type="hidden" name="id" value={asset.id} />
-            <button type="submit" className="btn-secondary">+ Slot</button>
+            <button type="submit" className="btn-secondary btn-sm">+ Slot</button>
           </form>
         )}
         {slottable && asset.slotOrder != null && (
           <form action={removeFromSlotAction}>
             <input type="hidden" name="id" value={asset.id} />
-            <button type="submit" className="link-muted">Remove from slot</button>
+            <button type="submit" className="btn-ghost btn-sm">Remove from slot</button>
           </form>
         )}
         <form action={deleteMediaAction}>
           <input type="hidden" name="id" value={asset.id} />
-          <button type="submit" className="link-danger">Delete</button>
+          <button type="submit" className="btn-danger btn-sm">Delete</button>
         </form>
       </div>
     </div>
@@ -125,10 +125,15 @@ function MediaGroup({
 }) {
   return (
     <div className="media-group">
-      <h2 className="media-group-title">{label}</h2>
-      <p className="muted" style={{ fontSize: "0.85rem", marginBottom: "1rem" }}>{hint}</p>
+      <div className="media-group-head">
+        <h2 className="media-group-title">{label}</h2>
+        <span className="media-group-count">
+          {assets.length} {assets.length === 1 ? "file" : "files"}
+        </span>
+      </div>
+      <p className="media-group-hint">{hint}</p>
       {assets.length === 0 ? (
-        <p className="muted">No assets uploaded yet.</p>
+        <p className="media-empty">No assets uploaded yet.</p>
       ) : (
         <div className="media-asset-list">
           {assets.map((a) => (
