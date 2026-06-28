@@ -19,7 +19,13 @@ import {
   type SessionValidationResult,
 } from "./session";
 
-const COOKIE_NAME = "admin_session";
+const IS_PROD = process.env.NODE_ENV === "production";
+
+// In production we use the __Host- prefix, which the browser ENFORCES to be
+// host-only + Secure + Path=/ (it rejects the cookie otherwise). That's exactly
+// our scoping requirement, browser-guaranteed. The prefix REQUIRES Secure, which
+// isn't available on plain-HTTP localhost, so we drop it in dev.
+const COOKIE_NAME = IS_PROD ? "__Host-admin_session" : "admin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days, matches session.ts
 
 // Create a session for userId and write the cookie. Returns the raw token.
@@ -30,7 +36,7 @@ export async function createSessionCookie(userId: string): Promise<void> {
   const store = await cookies();
   store.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: IS_PROD,
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_TTL_SECONDS,
@@ -43,7 +49,7 @@ export async function deleteSessionCookie(): Promise<void> {
   const store = await cookies();
   store.set(COOKIE_NAME, "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: IS_PROD,
     sameSite: "lax",
     path: "/",
     maxAge: 0,
