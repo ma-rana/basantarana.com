@@ -13,6 +13,7 @@
 // server component so the auth check runs on the server before anything renders.
 
 import { requireAdmin } from "../../../lib/auth/require-admin";
+import { countUnreadMessages } from "../../../lib/repos/contact";
 import { logoutAction } from "../actions";
 import { AdminShell } from "./admin-shell";
 
@@ -22,9 +23,14 @@ export default async function ProtectedAdminLayout({
   children: React.ReactNode;
 }) {
   const user = await requireAdmin(); // redirects to /admin/login if not authed
+  const unreadMessages = await countUnreadMessages();
 
   return (
-    <AdminShell userEmail={user.email} logoutAction={logoutAction}>
+    <AdminShell
+      userEmail={user.email}
+      logoutAction={logoutAction}
+      unreadMessages={unreadMessages}
+    >
       {children}
     </AdminShell>
   );

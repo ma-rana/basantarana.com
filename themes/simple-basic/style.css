@@ -13,6 +13,7 @@ h1{font-size:36px;margin:0 0 8px}h2{font-size:22px;margin:36px 0 14px;color:#006
 .card h3{margin:0 0 6px;font-size:17px}.card p{margin:0;color:#666}
 .tag{display:inline-block;font-size:13px;color:#0066cc;background:#eef4fb;border-radius:4px;padding:3px 10px;margin:8px 5px 0 0}
 .skills span{margin-right:12px}.stats{display:flex;gap:28px}.stat b{display:block;font-size:26px;color:#0066cc}.stat small{color:#666}
+.stats-counter{display:flex;flex-wrap:wrap;gap:28px}.stat-item{display:flex;flex-direction:column;gap:3px}.stat-value{font-size:26px;font-weight:bold;color:#0066cc;line-height:1;font-variant-numeric:tabular-nums}.stat-label{color:#666;font-size:14px}
 .thumb{max-width:100%;border-radius:6px;margin:16px 0}.content img{max-width:100%;border-radius:5px;margin:12px 0}
 .block-code{background:#f0f0ea;padding:12px;border-radius:5px;overflow-x:auto;font-size:13px;font-family:monospace}
 .gallery{display:flex;flex-wrap:wrap;gap:8px}.gallery img{max-width:48%;border-radius:5px}

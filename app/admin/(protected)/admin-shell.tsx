@@ -21,6 +21,7 @@ const NAV = [
   { href: "/admin/stats", label: "Platform stats" },
   { href: "/admin/themes", label: "Themes" },
   { href: "/admin/engagement", label: "Engagement" },
+  { href: "/admin/messages", label: "Messages" },
 ];
 
 // Active when the path matches exactly, or is a child route (but "/admin" only
@@ -33,10 +34,12 @@ function isActive(pathname: string, href: string): boolean {
 export function AdminShell({
   userEmail,
   logoutAction,
+  unreadMessages = 0,
   children,
 }: {
   userEmail: string;
   logoutAction: () => void;
+  unreadMessages?: number;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -84,15 +87,23 @@ export function AdminShell({
       <aside className="admin-nav" id="admin-nav">
         <div className="admin-brand">Portfolio CMS</div>
         <nav aria-label="Admin sections">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={isActive(pathname, item.href) ? "page" : undefined}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {NAV.map((item) => {
+            const showBadge = item.href === "/admin/messages" && unreadMessages > 0;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={isActive(pathname, item.href) ? "page" : undefined}
+              >
+                {item.label}
+                {showBadge && (
+                  <span className="nav-badge" aria-label={`${unreadMessages} unread`}>
+                    {unreadMessages}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
         <form action={logoutAction} className="admin-logout">
           <span className="admin-user">{userEmail}</span>

@@ -29,6 +29,8 @@ function parseForm(formData: FormData) {
     label: ((formData.get("label") as string) || "").trim(),
     value: Number(formData.get("value") ?? 0),
     order: Number(formData.get("order") ?? 0),
+    apiUrl: (formData.get("apiUrl") as string) ?? "",
+    apiPath: (formData.get("apiPath") as string) ?? "",
   });
 }
 
@@ -55,6 +57,7 @@ export async function createStatAction(
     return { ok: false, error: null, fieldErrors: { label: DUP_MSG } };
   }
   revalidatePath("/admin/stats");
+  revalidatePath("/");
   redirect("/admin/stats");
 }
 
@@ -75,6 +78,7 @@ export async function updateStatAction(
   }
   revalidatePath("/admin/stats");
   revalidatePath(`/admin/stats/${id}`);
+  revalidatePath("/");
   return { ok: true, error: null };
 }
 

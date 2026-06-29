@@ -12,14 +12,23 @@ import sharp from "sharp";
 import { getCurrentSession } from "../../../../lib/auth/cookies";
 import { db } from "../../../../lib/db";
 
-// Max sizes: 10 MB for images, 20 MB for PDFs, 100 MB for videos.
+// Max sizes: 10 MB for images, 20 MB for PDFs, 100 MB for videos, 1 MB favicon.
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_PDF_BYTES = 20 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+const MAX_FAVICON_BYTES = 1 * 1024 * 1024;
 
 // Allowed MIME types per media type.
 const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"]);
 const VIDEO_MIMES = new Set(["video/mp4", "video/webm", "video/ogg"]);
+// Favicons: browsers want .ico/.png/.svg (NOT webp), so these are stored as-is
+// (no sharp/WebP conversion). .ico reports a couple of MIME spellings.
+const FAVICON_MIMES = new Set([
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
+  "image/png",
+  "image/svg+xml",
+]);
 const PDF_MIME = "application/pdf";
 
 // Max output dimensions for images (longest edge).
@@ -44,7 +53,7 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file");
 
     // Validate media type.
-    const validTypes = ["AVATAR", "BACKGROUND", "COVER", "CV", "VIDEO_BACKGROUND"];
+    const validTypes = ["AVATAR", "BACKGROUND", "COVER", "CV", "VIDEO_BACKGROUND", "FAVICON"];
     if (!validTypes.includes(type)) {
       return NextResponse.json({ error: "Invalid media type." }, { status: 400 });
     }
@@ -55,6 +64,7 @@ export async function POST(req: NextRequest) {
 
     const isCV = type === "CV";
     const isVideo = type === "VIDEO_BACKGROUND";
+    const isFavicon = type === "FAVICON";
     const mime = file.type;
 
     if (isCV) {
@@ -73,6 +83,16 @@ export async function POST(req: NextRequest) {
       }
       if (file.size > MAX_VIDEO_BYTES) {
         return NextResponse.json({ error: "Video too large (max 100 MB)." }, { status: 400 });
+      }
+    } else if (isFavicon) {
+      if (!FAVICON_MIMES.has(mime)) {
+        return NextResponse.json(
+          { error: "Favicon must be a .ico, .png, or .svg file." },
+          { status: 400 },
+        );
+      }
+      if (file.size > MAX_FAVICON_BYTES) {
+        return NextResponse.json({ error: "Favicon too large (max 1 MB)." }, { status: 400 });
       }
     } else {
       if (!IMAGE_MIMES.has(mime)) {
@@ -100,6 +120,12 @@ export async function POST(req: NextRequest) {
       const ext = mime === "video/webm" ? ".webm" : mime === "video/ogg" ? ".ogg" : ".mp4";
       filename = `${randomUUID()}${ext}`;
       outputBuffer = bytes;
+    } else if (isFavicon) {
+      // Store favicons as-is (no WebP conversion) so browsers accept them.
+      const ext =
+        mime === "image/svg+xml" ? ".svg" : mime === "image/png" ? ".png" : ".ico";
+      filename = `${randomUUID()}${ext}`;
+      outputBuffer = bytes;
     } else if (mime === "image/svg+xml") {
       filename = `${randomUUID()}.svg`;
       outputBuffer = bytes;
@@ -120,7 +146,7 @@ export async function POST(req: NextRequest) {
 
     const asset = await db.mediaAsset.create({
       data: {
-        type: type as "AVATAR" | "BACKGROUND" | "COVER" | "CV" | "VIDEO_BACKGROUND",
+        type: type as "AVATAR" | "BACKGROUND" | "COVER" | "CV" | "VIDEO_BACKGROUND" | "FAVICON",
         url,
         filename: file.name,
         isActive: false,

@@ -20,6 +20,7 @@ import { Liquid } from "liquidjs";
 import { db } from "../../lib/db";
 import { getActiveMedia } from "./media";
 import { getActiveLinks } from "../../lib/repos/link";
+import { statDisplayValue } from "../../lib/repos/platform-stat";
 import { recordView, getLikeCountsBySlug } from "../../lib/repos/engagement";
 import {
   themeDir,
@@ -65,12 +66,13 @@ async function getSiteData() {
       cover: media.cover,
       cv: media.cv,
       video_background: media.video_background,
+      favicon: media.favicon,
       // Named slots (image1, image2, cover1, video1, background1, …)
       // and lists (images, covers, backgrounds, videos) — spread from media.
       // Keys are dynamic so we can't list them statically here.
       ...Object.fromEntries(
         Object.entries(media).filter(([k]) =>
-          !["avatar","background","cover","cv","video_background"].includes(k)
+          !["avatar","background","cover","cv","video_background","favicon"].includes(k)
         )
       ),
       // External links: canonical {{ profile.link }} / {{ profile.link_label }},
@@ -90,7 +92,10 @@ async function getSiteData() {
       };
     }),
     skills: skills.map((s) => ({ name: s.name, category: s.category, level: s.level })),
-    stats: stats.map((s) => ({ platform: s.platform, label: s.label, value: s.value })),
+    // Stats: a theme reads {{ stat.value }}. For API-backed stats that's the
+    // live cached number; for manual stats it's the typed value. apiUrl is
+    // NEVER exposed (it may hold a secret key) — only the resulting number.
+    stats: stats.map((s) => ({ platform: s.platform, label: s.label, value: statDisplayValue(s) })),
   };
 }
 
@@ -156,6 +161,122 @@ async function getPageFlags(dir: string): Promise<Record<string, boolean>> {
 }
 
 type SiteData = Awaited<ReturnType<typeof getSiteData>>;
+
+// Ready-to-use animated stats counter, exposed as {{ stats_counter }}. Like
+// {{ contact_form }}, it's a one-token drop-in: it emits the full stats block
+// (each value in markup) PLUS a small <script> that counts each number up from
+// 0 to its value when it scrolls into view. Numbers render as plain text first,
+// so if JavaScript is off the final values still show (progressive enhancement).
+//
+// The animation RESPECTS prefers-reduced-motion: visitors who ask for less
+// motion see the final numbers instantly, no counting.
+//
+// Styling hooks (style from your CSS): .stats-counter (wrapper), .stat-item,
+// .stat-value, .stat-label. The script is scoped to THIS block via a unique
+// data attribute so multiple counters / re-renders don't fight.
+function renderStatsCounter(stats: { platform: string; label: string; value: number }[]): string {
+  if (!stats.length) return "";
+
+  const items = stats
+    .map(
+      (s) =>
+        `  <div class="stat-item" data-platform="${escapeAttr(s.platform)}">
+    <b class="stat-value" data-target="${s.value}">${s.value.toLocaleString()}</b>
+    <small class="stat-label">${escapeHtml(s.label)}</small>
+  </div>`,
+    )
+    .join("\n");
+
+  // The script: count up when each number scrolls into view, once each,
+  // reduced-motion aware. Robust against framework rendering (no reliance on
+  // document.currentScript). Elements that are ALREADY in view at load animate
+  // too (the observer fires for them immediately). A data flag prevents double
+  // animation. Markup ships the FINAL value as text so non-JS visitors still see
+  // the real number; the script resets to 0 only when it's about to animate.
+  const script = `<script>
+(function(){
+  function init(){
+    var els = document.querySelectorAll('.stats-counter .stat-value');
+    if(!els.length) return;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function fmt(n){ return n.toLocaleString(); }
+    function run(el){
+      if(el.dataset.counted) return;
+      el.dataset.counted = '1';
+      var target = +el.getAttribute('data-target') || 0;
+      if(reduce){ el.textContent = fmt(target); return; }
+      var start = performance.now(), dur = 1200;
+      el.textContent = '0';
+      function tick(now){
+        var p = Math.min((now-start)/dur, 1);
+        var eased = 1 - Math.pow(1-p, 3);
+        el.textContent = fmt(Math.floor(eased*target));
+        if(p<1) requestAnimationFrame(tick); else el.textContent = fmt(target);
+      }
+      requestAnimationFrame(tick);
+    }
+    if(!('IntersectionObserver' in window)){ els.forEach(run); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ run(e.target); io.unobserve(e.target); } });
+    }, { threshold: 0.4 });
+    els.forEach(function(el){ io.observe(el); });
+  }
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', init); }
+  else { init(); }
+})();
+</script>`;
+
+  return `<div class="stats-counter">\n${items}\n</div>\n${script}`;
+}
+
+// Minimal HTML escapers for helper-built markup (labels/platform come from the
+// admin, but escape anyway — defense in depth, and platform is used in an attr).
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function escapeAttr(s: string): string {
+  return escapeHtml(s).replace(/"/g, "&quot;");
+}
+
+// Ready-to-use contact form, exposed to themes as {{ contact_form }}. A theme
+// author can drop this single token to get a complete, working form without
+// remembering the contract (field names, honeypot, status handling). It posts
+// to /api/contact — the SAME contract a hand-built form uses — so the helper
+// and the documented contract stay in sync (one source of truth).
+//
+// Styling: the markup carries stable class names (.contact-form, .contact-field,
+// .contact-label, .contact-input, .contact-textarea, .contact-button, plus
+// .contact-status.is-sent / .is-error) so a theme styles it entirely from its
+// own CSS without touching the markup. `formStatus` ('sent' | 'error' | '')
+// drives the inline status message.
+function renderContactForm(formStatus: string): string {
+  const status =
+    formStatus === "sent"
+      ? `<p class="contact-status is-sent" role="status">Thanks &mdash; your message was sent.</p>`
+      : formStatus === "error"
+        ? `<p class="contact-status is-error" role="alert">Something went wrong. Please try again.</p>`
+        : "";
+
+  return `${status}
+<form class="contact-form" method="POST" action="/api/contact">
+  <label class="contact-field">
+    <span class="contact-label">Name</span>
+    <input class="contact-input" type="text" name="name" required maxlength="100">
+  </label>
+  <label class="contact-field">
+    <span class="contact-label">Email</span>
+    <input class="contact-input" type="email" name="email" required maxlength="200">
+  </label>
+  <label class="contact-field">
+    <span class="contact-label">Message</span>
+    <textarea class="contact-textarea" name="message" rows="5" required maxlength="5000"></textarea>
+  </label>
+  <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;">
+    <label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+  </div>
+  <button class="contact-button" type="submit">Send message</button>
+</form>`;
+}
 
 // All custom-page slugs present on disk for this theme, as a list themes can
 // iterate for an auto nav: {% for p in custom_pages %}<a href="/{{p}}">{{p}}</a>.
@@ -350,7 +471,31 @@ export async function renderPage(
   const pages = await getPageFlags(dir);
   const custom_pages = await getCustomPageSlugs(dir);
 
-  const data = { ...site, ...match.extra, pages, custom_pages, formStatus: opts.formStatus ?? "" };
+  const data = {
+    ...site,
+    ...match.extra,
+    pages,
+    custom_pages,
+    formStatus: opts.formStatus ?? "",
+    contact_form: renderContactForm(opts.formStatus ?? ""),
+    // Animated stats counter (markup + count-up script), one-token drop-in.
+    // Same pattern as contact_form. Themes that want custom markup can instead
+    // loop `stats` and add their own script (see PLACEHOLDER_CHEATSHEET.md).
+    stats_counter: renderStatsCounter(site.stats),
+    // The active theme's key + a ready-made stylesheet URL, so a theme can link
+    // its OWN style.css portably regardless of what it's named:
+    //   <link rel="stylesheet" href="{{ style_url }}">
+    // (equivalently "/themes/{{ theme_key }}/style.css"). This avoids the
+    // footgun of hardcoding a theme key in the <link> that breaks when the
+    // theme is renamed or copied.
+    theme_key: key,
+    style_url: `/themes/${key}/style.css`,
+    // The active site favicon URL (or null). A theme can place it explicitly:
+    //   <link rel="icon" href="{{ favicon }}">
+    // and if it doesn't, the engine auto-injects it into <head> (see below), so
+    // the favicon works whether or not the theme references it.
+    favicon: site.profile.favicon ?? null,
+  };
 
   const pageTpl = await fs.readFile(pagePath, "utf-8");
   const content = await engine.parseAndRender(pageTpl, data);
@@ -361,6 +506,16 @@ export async function renderPage(
   if (await themeFileExists(dir, "layout.html")) {
     const layoutTpl = await fs.readFile(path.join(dir, "layout.html"), "utf-8");
     html = await engine.parseAndRender(layoutTpl, { ...data, content });
+  }
+
+  // Favicon auto-fallback: if a favicon is set and the theme didn't already add
+  // its own icon link (e.g. via {{ favicon }}), inject one into <head> so the
+  // favicon works regardless of whether the theme references it. We only inject
+  // when there's a <head> to inject into and no existing rel="icon".
+  const fav = site.profile.favicon;
+  if (fav && /<head[^>]*>/i.test(html) && !/rel=["'][^"']*\bicon\b/i.test(html)) {
+    const tag = `<link rel="icon" href="${fav}">`;
+    html = html.replace(/<head([^>]*)>/i, `<head$1>\n  ${tag}`);
   }
 
   return { html, status: 200 };

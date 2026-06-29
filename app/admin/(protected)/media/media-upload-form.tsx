@@ -17,8 +17,21 @@ export function MediaUploadForm({ type }: { type: string }) {
 
   const isCV = type === "CV";
   const isVideo = type === "VIDEO_BACKGROUND";
-  const accept = isCV ? ".pdf,application/pdf" : isVideo ? "video/mp4,video/webm,video/ogg" : "image/*";
-  const acceptHint = isCV ? "PDF" : isVideo ? "MP4, WebM, Ogg" : "JPG, PNG, WebP, GIF";
+  const isFavicon = type === "FAVICON";
+  const accept = isCV
+    ? ".pdf,application/pdf"
+    : isVideo
+      ? "video/mp4,video/webm,video/ogg"
+      : isFavicon
+        ? ".ico,.png,.svg,image/x-icon,image/vnd.microsoft.icon,image/png,image/svg+xml"
+        : "image/*";
+  const acceptHint = isCV
+    ? "PDF"
+    : isVideo
+      ? "MP4, WebM, Ogg"
+      : isFavicon
+        ? "ICO, PNG, SVG"
+        : "JPG, PNG, WebP, GIF";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

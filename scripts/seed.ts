@@ -105,15 +105,13 @@ async function main() {
     ],
   });
 
-  // --- Media library (many per type; one active each) ---
-  await db.mediaAsset.createMany({
-    data: [
-      { type: "AVATAR", url: "/uploads/avatar-sample.webp", filename: "me.jpg", isActive: true },
-      { type: "BACKGROUND", url: "/uploads/bg-mountains.webp", filename: "mountains.jpg", isActive: true },
-      { type: "BACKGROUND", url: "/uploads/bg-city.webp", filename: "city.jpg", isActive: false },
-      { type: "CV", url: "/uploads/cv-2026.pdf", filename: "cv-2026.pdf", isActive: true },
-    ],
-  });
+  // --- Media library ---
+  // NOTE: seeding media ROWS that point at files which don't physically exist
+  // produces broken images locally and orphaned 404s (e.g. /uploads/bg-x.webp).
+  // So we DON'T seed media here. Upload real images through the admin Media tab
+  // — each upload writes a real file to public/uploads/ and creates its row.
+  // (If you want placeholder imagery for local theme testing, drop real files
+  // into public/uploads/ and add matching rows here pointing at those names.)
 
   // --- Themes (folder name = key; minimal active by default) ---
   await db.theme.createMany({
@@ -121,6 +119,7 @@ async function main() {
       { key: "minimal", name: "Minimal", isActive: true },
       { key: "showcase", name: "Showcase", isActive: false },
       { key: "simple-basic", name: "Simple Basic", isActive: false },
+      { key: "starter", name: "Starter", isActive: false },
     ],
   });
 

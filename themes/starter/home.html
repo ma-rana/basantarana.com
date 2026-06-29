@@ -1,0 +1,86 @@
+{%- comment -%}
+  ============================================================================
+  STARTER THEME — home.html  (served at "/")
+  ============================================================================
+  The home page. The ONLY required file in a theme. You compose the page by
+  writing the bands you want, in the order you want. Each {% if %} keeps a band
+  from rendering empty when there's no data for it.
+
+  Every band below is optional — delete what you don't need, reorder freely.
+  ============================================================================
+{%- endcomment -%}
+
+{%- comment -%} ---- HERO ---- {%- endcomment -%}
+<section class="hero">
+  {% if profile.avatar %}<img class="avatar" src="{{ profile.avatar }}" alt="{{ profile.name }}">{% endif %}
+  <h1>{{ profile.name }}</h1>
+  {% if profile.headline %}<p class="headline">{{ profile.headline }}</p>{% endif %}
+  {% if profile.bio.short %}<p class="bio">{{ profile.bio.short }}</p>{% endif %}
+  {% if profile.cv %}<a class="btn" href="{{ profile.cv }}" download>Download CV</a>{% endif %}
+</section>
+
+{%- comment -%} ---- ABOUT (medium bio) ---- {%- endcomment -%}
+{% if profile.bio.medium %}
+<section class="band">
+  <h2>About</h2>
+  <p>{{ profile.bio.medium }}</p>
+</section>
+{% endif %}
+
+{%- comment -%} ---- PROJECTS (PUBLISHED only; loop the list) ---- {%- endcomment -%}
+{% if projects.size > 0 %}
+<section class="band">
+  <h2>Projects</h2>
+  <div class="cards">
+    {% for project in projects %}
+    <a class="card" href="/projects/{{ project.slug }}">
+      {% if project.thumbnail %}<img src="{{ project.thumbnail }}" alt="{{ project.title }}">{% endif %}
+      <h3>{{ project.title }} {% if project.featured %}<span class="star">★</span>{% endif %}</h3>
+      <p>{{ project.summary }}</p>
+      <div class="tags">{% for tag in project.tags %}<span class="tag">{{ tag }}</span>{% endfor %}</div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{%- comment -%} ---- SKILLS ---- {%- endcomment -%}
+{% if skills.size > 0 %}
+<section class="band">
+  <h2>Skills</h2>
+  <ul class="skills">
+    {% for skill in skills %}<li>{{ skill.name }}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{%- comment -%} ---- STATS (animated count-up via the helper) ---- {%- endcomment -%}
+{% if stats.size > 0 %}
+<section class="band">
+  <h2>By the numbers</h2>
+  {%- comment -%}
+    EASY: {{ stats_counter }} drops in the whole stats block + a count-up script
+    (animates 0 -> value when scrolled into view, respects reduced-motion).
+    Style via .stats-counter / .stat-item / .stat-value / .stat-label.
+
+    FULL CONTROL: prefer your own markup? Loop stats yourself and add your own
+    script — see PLACEHOLDER_CHEATSHEET.md "Animated counter". Example:
+      <div class="stats">
+      {% for stat in stats %}
+        <div class="stat"><b>{{ stat.value }}</b><small>{{ stat.label }}</small></div>
+      {% endfor %}
+      </div>
+  {%- endcomment -%}
+  {{ stats_counter }}
+</section>
+{% endif %}
+
+{%- comment -%} ---- CONTACT CTA ---- {%- endcomment -%}
+<section class="band cta">
+  <h2>Get in touch</h2>
+  {% if pages.contact %}
+    <a class="btn" href="/contact">Contact me</a>
+  {% elsif profile.email %}
+    <a class="btn" href="mailto:{{ profile.email }}">Email me</a>
+  {% endif %}
+</section>

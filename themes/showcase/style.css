@@ -64,6 +64,11 @@ section{padding:64px 0;border-top:1px solid var(--line)}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px}
 .stat b{display:block;font-family:var(--serif);font-size:40px;line-height:1;color:var(--amber)}
 .stat small{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);display:block;margin-top:10px}
+/* animated counter ({{ stats_counter }} helper) — matches the .stat panel look */
+.stats-counter{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:24px}
+.stat-item{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px}
+.stat-value{display:block;font-family:var(--serif);font-size:40px;line-height:1;color:var(--amber);font-variant-numeric:tabular-nums}
+.stat-label{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);display:block;margin-top:10px}
 
 /* skills grouped by category, with level bars */
 .skill-group{margin-bottom:28px}

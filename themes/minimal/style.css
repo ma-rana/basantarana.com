@@ -18,15 +18,24 @@ h2 { font-size: 18px; margin: 32px 0 12px; }
 .stats { display: flex; gap: 20px; }
 .stat b { display: block; font-size: 22px; }
 .stat small { color: #6b7280; }
+.stats-counter { display: flex; flex-wrap: wrap; gap: 28px; }
+.stat-item { display: flex; flex-direction: column; gap: 2px; }
+.stat-value { font-size: 26px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat-label { color: #6b7280; font-size: 14px; }
 .thumb { max-width: 100%; border-radius: 8px; margin: 16px 0; }
 .content img { max-width: 100%; border-radius: 6px; margin: 12px 0; }
 .block-code { background: #f6f8fa; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 13px; }
 .gallery { display: flex; flex-wrap: wrap; gap: 8px; }
 .gallery img { max-width: 48%; border-radius: 6px; }
 .contact-form { display: flex; flex-direction: column; gap: 12px; max-width: 420px; margin-top: 16px; }
-.contact-form label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: #374151; }
-.contact-form input, .contact-form textarea { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font: inherit; }
-.contact-form button { padding: 10px; border: none; border-radius: 6px; background: #1a1a1a; color: #fff; font: inherit; cursor: pointer; }
+.contact-form label, .contact-field { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: #374151; }
+.contact-form input, .contact-form textarea, .contact-input, .contact-textarea { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font: inherit; }
+.contact-form button, .contact-button { padding: 10px; border: none; border-radius: 6px; background: #1a1a1a; color: #fff; font: inherit; cursor: pointer; }
+.contact-status { margin: 0 0 12px; font-size: 14px; }
+.contact-status.is-sent { color: #16a34a; }
+.contact-status.is-error { color: #dc2626; }
+.contact-alt { margin-top: 16px; font-size: 14px; color: #6b7280; }
+.contact-alt a { color: #1a1a1a; }
 .form-ok { color: #16a34a; }
 .form-error { color: #dc2626; }
 .site-footer { padding: 24px 0; border-top: 1px solid #eee; color: #9ca3af; font-size: 14px; }

@@ -38,9 +38,8 @@
 {% if stats.size > 0 %}
 <section>
   <h2>Around the web</h2>
-  <div class="stats">
-    {% for stat in stats %}<div class="stat"><b>{{ stat.value }}</b><small>{{ stat.label }}</small></div>{% endfor %}
-  </div>
+  {%- comment -%} Animated count-up via the {{ stats_counter }} helper. {%- endcomment -%}
+  {{ stats_counter }}
 </section>
 {% endif %}
 

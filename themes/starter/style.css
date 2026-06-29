@@ -1,0 +1,178 @@
+/* ============================================================================
+   STARTER THEME — style.css
+   Linked from layout.html via {{ style_url }} (portable — never hardcode the key).
+   ----------------------------------------------------------------------------
+   Organized as: tokens → base → layout → components. Recolor the whole theme by
+   editing the variables in :root. Includes a dark-mode block that flips the
+   tokens for visitors who prefer dark.
+   ========================================================================== */
+
+/* ---- Design tokens (edit these to restyle everything) ---- */
+:root {
+  --bg: #ffffff;
+  --surface: #f7f8fa;
+  --ink: #1a1a1a;
+  --ink-soft: #5b6675;
+  --ink-faint: #8a94a3;
+  --line: #e3e7ed;
+  --accent: #2563eb;
+  --accent-ink: #ffffff;
+  --radius: 10px;
+  --maxw: 720px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --ink: #e6eaf0;
+    --ink-soft: #aab3c0;
+    --ink-faint: #79828f;
+    --line: #262d36;
+    --accent: #60a5fa;
+    --accent-ink: #0d1117;
+  }
+}
+
+/* ---- Base ---- */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); }
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+h2 { font-size: 1.3rem; margin: 0 0 1rem; letter-spacing: -0.01em; }
+h3 { font-size: 1.05rem; margin: 0 0 0.4rem; }
+img { max-width: 100%; height: auto; }
+
+/* ---- Layout ---- */
+.container { max-width: var(--maxw); margin: 0 auto; padding: 0 1.25rem; }
+main { padding: 2.5rem 0; }
+.band { padding: 1.5rem 0; border-top: 1px solid var(--line); }
+.band:first-child { border-top: none; }
+
+/* ---- Header / footer ---- */
+.site-header { border-bottom: 1px solid var(--line); }
+.header-inner { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; }
+.brand { font-weight: 700; text-decoration: none; color: var(--ink); letter-spacing: -0.01em; }
+.nav a { margin-left: 1rem; text-decoration: none; color: var(--ink-soft); font-size: 0.95rem; }
+.nav a:hover { color: var(--ink); }
+.site-footer { border-top: 1px solid var(--line); padding: 1.5rem 0; color: var(--ink-faint); font-size: 0.9rem; }
+.site-footer .social a { margin-right: 1rem; }
+
+/* ---- Hero ---- */
+.hero { text-align: center; padding: 2rem 0; }
+.avatar { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; }
+.headline { color: var(--ink-soft); font-size: 1.1rem; margin: 0 0 0.75rem; }
+.bio { color: var(--ink-soft); max-width: 48ch; margin: 0 auto 1.25rem; }
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-block;
+  padding: 0.65rem 1.3rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  text-decoration: none;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.btn:hover { opacity: 0.9; }
+
+/* ---- Project cards ---- */
+.cards { display: grid; gap: 1rem; }
+@media (min-width: 560px) { .cards { grid-template-columns: 1fr 1fr; } }
+.card {
+  display: block;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+}
+.card:hover { border-color: var(--accent); }
+.card img { border-radius: 6px; margin-bottom: 0.6rem; }
+.card p { color: var(--ink-soft); margin: 0.25rem 0 0.6rem; font-size: 0.92rem; }
+.star { color: #f59e0b; }
+
+/* ---- Tags ---- */
+.tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.tag {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+}
+
+/* ---- Skills / stats ---- */
+.skills { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.skills li { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 0.3rem 0.8rem; font-size: 0.9rem; }
+.stats { display: flex; flex-wrap: wrap; gap: 2rem; }
+.stat b { display: block; font-size: 1.6rem; letter-spacing: -0.02em; }
+.stat small { color: var(--ink-faint); }
+
+/* Animated counter ({{ stats_counter }} helper). The values count up on scroll. */
+.stats-counter { display: flex; flex-wrap: wrap; gap: 2.5rem; margin-top: 0.5rem; }
+.stat-item { display: flex; flex-direction: column; gap: 0.15rem; }
+.stat-value {
+  font-size: 2rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums; /* digits keep width while counting */
+}
+.stat-label { color: var(--ink-faint); font-size: 0.9rem; }
+
+/* ---- Project detail ---- */
+.back { display: inline-block; margin-bottom: 1rem; color: var(--ink-soft); text-decoration: none; font-size: 0.9rem; }
+.thumb { border-radius: var(--radius); margin: 1rem 0; }
+.content .rich { margin: 1rem 0; }
+.content img { border-radius: 6px; margin: 1rem 0; }
+.code { background: var(--surface); border: 1px solid var(--line); padding: 1rem; border-radius: var(--radius); overflow-x: auto; font-size: 0.85rem; }
+.gallery { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.gallery img { width: calc(50% - 0.25rem); border-radius: 6px; object-fit: cover; }
+.like { display: flex; align-items: center; gap: 0.75rem; margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+.like button { padding: 0.5rem 1rem; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); cursor: pointer; font: inherit; }
+.like button:hover { border-color: var(--accent); }
+.like-count { color: var(--ink-soft); font-size: 0.9rem; }
+.meta { color: var(--ink-faint); }
+
+/* ---- Contact form (these classes match the {{ contact_form }} helper) ---- */
+.contact-form { display: flex; flex-direction: column; gap: 0.85rem; max-width: 480px; margin-top: 1.25rem; }
+.contact-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.contact-label { font-size: 0.88rem; color: var(--ink-soft); font-weight: 500; }
+.contact-input, .contact-textarea {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+}
+.contact-textarea { resize: vertical; min-height: 6rem; }
+.contact-input:focus, .contact-textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.contact-button {
+  align-self: flex-start;
+  padding: 0.65rem 1.3rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.contact-button:hover { opacity: 0.9; }
+.contact-status { margin: 0 0 1rem; font-weight: 500; }
+.contact-status.is-sent { color: #16a34a; }
+.contact-status.is-error { color: #dc2626; }
+.contact-alt { margin-top: 1.25rem; color: var(--ink-soft); font-size: 0.92rem; }

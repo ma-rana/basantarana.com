@@ -40,6 +40,7 @@ export type ActiveMedia = {
   cover:            string | null;
   cv:               string | null;
   video_background: string | null;
+  favicon:          string | null;
   [key: string]: string | string[] | null;
 };
 
@@ -83,6 +84,7 @@ export async function getActiveMedia(): Promise<ActiveMedia> {
     cover:            pickCanonical("COVER"),
     cv:               pickCanonical("CV"),
     video_background: pickCanonical("VIDEO_BACKGROUND"),
+    favicon:          pickCanonical("FAVICON"),
     ...slotData,
   };
 }

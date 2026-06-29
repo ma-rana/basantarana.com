@@ -1,0 +1,75 @@
+{%- comment -%}
+  ============================================================================
+  STARTER THEME — layout.html
+  ============================================================================
+  This is the shared wrapper for every page. The current page's HTML drops into
+  {{ content }}. Put anything that should appear on EVERY page here once: the
+  <head>, the CSS link, the site header/nav, and the footer.
+
+  layout.html is OPTIONAL. If you delete it, each page renders on its own (good
+  for a single self-contained home.html with inline <style>). Keeping it is the
+  clean choice for a multi-page theme so you don't repeat the header everywhere.
+
+  KEY LESSON — portable CSS link:
+    Use {{ style_url }} to link this theme's style.css. It resolves to
+    /themes/<this-theme's-key>/style.css automatically, so it keeps working no
+    matter what the theme is named or whether it's copied. NEVER hardcode the
+    key (href="/themes/starter/style.css") — that breaks on rename/copy.
+  ============================================================================
+{%- endcomment -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {%- comment -%} {{ page.title }} is set per page; {{ profile.name }} is your name. {%- endcomment -%}
+  <title>{{ page.title }} — {{ profile.name }}</title>
+
+  {%- comment -%} Portable stylesheet link — see KEY LESSON above. {%- endcomment -%}
+  <link rel="stylesheet" href="{{ style_url }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/">{{ profile.name }}</a>
+      <nav class="nav">
+        <a href="/">Home</a>
+        {%- comment -%}
+          Guard optional-page links with the `pages` flags so you never link a
+          page the theme doesn't include (which would 404). pages.about is true
+          only when about.html exists in this theme.
+        {%- endcomment -%}
+        {% if pages.about %}<a href="/about">About</a>{% endif %}
+        {% if pages.contact %}<a href="/contact">Contact</a>{% endif %}
+        {%- comment -%}
+          Custom pages (any extra <slug>.html you upload) auto-route at /<slug>.
+          This loop builds nav links for every one present — drop it if you don't
+          use custom pages.
+        {%- endcomment -%}
+        {% for slug in custom_pages %}<a href="/{{ slug }}">{{ slug }}</a>{% endfor %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {{ content }}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© {{ profile.name }}</p>
+      {%- comment -%}
+        Social links by KEY: give a link a key in the admin (e.g. "github") and
+        reference it as profile.link_github. This row only shows links you've
+        actually keyed; each {% if %} hides a missing one cleanly. Add more keys
+        as you set them up (twitter, linkedin, youtube, …).
+      {%- endcomment -%}
+      <p class="social">
+        {% if profile.link_github %}<a href="{{ profile.link_github }}">{{ profile.link_github_label }}</a>{% endif %}
+        {% if profile.link_linkedin %}<a href="{{ profile.link_linkedin }}">{{ profile.link_linkedin_label }}</a>{% endif %}
+        {% if profile.link_twitter %}<a href="{{ profile.link_twitter }}">{{ profile.link_twitter_label }}</a>{% endif %}
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

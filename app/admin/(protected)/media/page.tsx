@@ -229,11 +229,19 @@ export default async function MediaPage() {
   const backgrounds = byType("BACKGROUND");
   const videoBackgrounds = byType("VIDEO_BACKGROUND");
   const cvs         = byType("CV");
+  const favicons    = byType("FAVICON");
 
   const links = await listLinks();
 
   const photosPanel = (
     <div>
+      <MediaGroup
+        label="Favicon"
+        hint="The little icon in the browser tab. Single-active; auto-added to every page's <head>, or place it yourself with {{ favicon }}. Use a .ico, .png, or .svg (square, e.g. 32×32 or larger) — stored as-is, max 1 MB."
+        assets={favicons}
+        uploadType="FAVICON"
+        slottable={false}
+      />
       <MediaGroup
         label="Avatar"
         hint="Your profile photo. Single-active: {{ profile.avatar }}. Use + Slot to also assign as image1, image2… for themes that reference multiple photos."

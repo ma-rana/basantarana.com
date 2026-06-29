@@ -109,8 +109,17 @@ model PlatformStat {
   id        String   @id @default(cuid())
   platform  String                       // "youtube","github","linkedin"...
   label     String                       // "Subscribers","Followers"
-  value     Int      @default(0)         // manual now; API-updated later
+  value     Int      @default(0)         // manual value; used when no apiUrl set,
+                                          // or as fallback when a fetch fails
   order     Int      @default(0)
+  // OPTIONAL live stats. If apiUrl is set, a scheduled refresh fetches it,
+  // walks apiPath into the JSON, and stores the number in cachedValue. Themes
+  // then show cachedValue instead of `value`. Blank apiUrl = manual, as before.
+  // apiUrl is SERVER-ONLY (may contain an API key) — never rendered to themes.
+  apiUrl      String?                    // e.g. https://api.github.com/users/me
+  apiPath     String?                    // dot path: "followers" or "items.0.statistics.subscriberCount"
+  cachedValue Int?                       // last successfully fetched number
+  fetchedAt   DateTime?                  // when cachedValue was last refreshed
   updatedAt DateTime @updatedAt
   @@unique([platform, label])
 }
@@ -153,7 +162,10 @@ model ContactMessage {
   name      String
   email     String
   message   String
+  read      Boolean  @default(false)   // admin marks read/unread in the inbox
   createdAt DateTime @default(now())
+
+  @@index([read, createdAt])
 }
 
 // Media library: upload many per type, activate one. Same pattern as Theme.
@@ -181,6 +193,7 @@ enum MediaType {
   COVER
   CV
   VIDEO_BACKGROUND
+  FAVICON
 }
 
 // External links (social profiles, external sites, anything URL-based). Same

@@ -1,0 +1,22 @@
+{%- comment -%}
+  STARTER THEME — about.html  (served at "/about")
+  OPTIONAL. Delete this file and /about returns 404 (and the nav link auto-hides
+  because pages.about becomes false). Uses the long bio for a fuller story.
+{%- endcomment -%}
+<section class="band">
+  <h1>About</h1>
+  {% if profile.bio.long %}
+    <p>{{ profile.bio.long }}</p>
+  {% elsif profile.bio.medium %}
+    <p>{{ profile.bio.medium }}</p>
+  {% endif %}
+
+  {% if profile.location %}<p class="meta">Based in {{ profile.location }}.</p>{% endif %}
+
+  {%- comment -%} A gallery of any slotted photos, if you've slotted some. {%- endcomment -%}
+  {% if profile.images.size > 0 %}
+  <div class="gallery">
+    {% for img in profile.images %}<img src="{{ img }}" alt="">{% endfor %}
+  </div>
+  {% endif %}
+</section>
