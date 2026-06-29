@@ -1,6 +1,6 @@
 "use client";
 
-// MediaTabs — tab switcher for Photos / Backgrounds / Documents.
+// MediaTabs — tab switcher for Photos / Backgrounds / Documents / Links.
 // All panel content is server-rendered and passed as React nodes; this
 // component only manages which one is shown via the `hidden` attribute.
 //
@@ -9,22 +9,25 @@
 
 import { useRef, useState } from "react";
 
-export type TabId = "photos" | "backgrounds" | "documents";
+export type TabId = "photos" | "backgrounds" | "documents" | "links";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "photos", label: "Photos" },
   { id: "backgrounds", label: "Backgrounds" },
   { id: "documents", label: "Documents" },
+  { id: "links", label: "Links" },
 ];
 
 export function MediaTabs({
   photos,
   backgrounds,
   documents,
+  links,
 }: {
   photos: React.ReactNode;
   backgrounds: React.ReactNode;
   documents: React.ReactNode;
+  links: React.ReactNode;
 }) {
   const [active, setActive] = useState<TabId>("photos");
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -33,6 +36,7 @@ export function MediaTabs({
     photos,
     backgrounds,
     documents,
+    links,
   };
 
   // Arrow-key navigation across the tablist (WAI-ARIA tabs pattern).

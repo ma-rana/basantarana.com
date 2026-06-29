@@ -19,6 +19,7 @@
 import { Liquid } from "liquidjs";
 import { db } from "../../lib/db";
 import { getActiveMedia } from "./media";
+import { getActiveLinks } from "../../lib/repos/link";
 import { recordView, getLikeCountsBySlug } from "../../lib/repos/engagement";
 import {
   themeDir,
@@ -39,6 +40,7 @@ async function getSiteData() {
   // (with blank profile fields) rather than 500 the whole public site.
   const profileRow = await db.profile.findFirst({ orderBy: { updatedAt: "desc" } });
   const media = await getActiveMedia();
+  const links = await getActiveLinks();
   const projects = await db.project.findMany({
     where: { status: "PUBLISHED" }, // <- DRAFT/ARCHIVED never reach a theme
     orderBy: [{ featured: "desc" }, { order: "asc" }],
@@ -71,6 +73,10 @@ async function getSiteData() {
           !["avatar","background","cover","cv","video_background"].includes(k)
         )
       ),
+      // External links: canonical {{ profile.link }} / {{ profile.link_label }},
+      // numbered slots {{ profile.link1 }} (+ _label), and the slotted list
+      // {% for l in profile.links %}{{ l.url }} {{ l.label }}{% endfor %}.
+      ...links,
     },
     projects: projects.map((p) => {
       const m = (p.media as { thumbnail?: string; gallery?: string[] }) ?? {};

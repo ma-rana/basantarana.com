@@ -2095,3 +2095,58 @@ button:focus-visible {
   text-overflow: ellipsis;
 }
 .media-upload-input { font-size: 0.85rem; flex: 1; min-width: 0; }
+
+/* ---------- Links tab ---------- */
+/* A link row reuses .media-asset-row, but instead of a thumbnail it shows the
+   label (as the title) with the URL beneath. */
+.link-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.link-row-url {
+  font-size: 0.78rem;
+  color: var(--adm-ink-faint);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.link-row-url:hover { color: var(--adm-accent); text-decoration: underline; }
+
+/* Add-a-link form: URL + label + optional key inputs on one row with the submit
+   button, wrapping on narrow screens. */
+.link-add-form { display: flex; flex-direction: column; gap: 0.5rem; }
+.link-add-fields {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.link-add-url { flex: 2; min-width: 180px; }
+.link-add-label { flex: 1.4; min-width: 140px; }
+.link-add-key { flex: 1; min-width: 110px; }
+.link-add-fields .btn-primary { flex-shrink: 0; }
+.link-add-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--adm-ink-faint);
+}
+.link-add-hint code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.74rem;
+  padding: 0.04rem 0.3rem;
+  border-radius: 5px;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line);
+  color: var(--adm-ink-soft);
+}
+.link-add-hint strong { color: var(--adm-ink-soft); font-weight: 650; }
+@media (max-width: 560px) {
+  .link-add-url, .link-add-label, .link-add-key { flex: 1 1 100%; }
+  .link-add-fields .btn-primary { width: 100%; }
+}

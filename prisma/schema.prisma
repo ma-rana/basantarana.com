@@ -182,3 +182,28 @@ enum MediaType {
   CV
   VIDEO_BACKGROUND
 }
+
+// External links (social profiles, external sites, anything URL-based). Same
+// "add-many, activate, slot" pattern as MediaAsset, but a link has no stored
+// file — just a url + a human label. Themes read the active link via
+// {{ profile.link }} / {{ profile.link_label }}, numbered slots via
+// {{ profile.link1 }} (+ _label), and the full slotted list via
+// {% for l in profile.links %}{{ l.url }} / {{ l.label }}{% endfor %}.
+// slotOrder uniqueness is enforced in application code (like MediaAsset).
+model LinkAsset {
+  id        String   @id @default(cuid())
+  url       String                          // the external URL
+  label     String                          // visible text, e.g. "My GitHub"
+  // Optional named key (e.g. "github"). When set, the link is exposed to themes
+  // as {{ profile.link_<key> }} (+ _label) for direct, named lookup — ideal for
+  // social profiles. A keyed link ALSO still works in the slot system. Keys are
+  // a safe slug shape; on collision the most recently created link wins.
+  key       String?
+  isActive  Boolean  @default(false)        // canonical active (many allowed)
+  slotOrder Int?                            // numbered slot: 1=link1, 2=link2 …
+  createdAt DateTime @default(now())
+
+  @@index([isActive])
+  @@index([slotOrder])
+  @@index([key])
+}

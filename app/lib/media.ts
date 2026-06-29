@@ -17,10 +17,12 @@
 //    {{ profile.cover1 }}, {{ profile.cover2 }}, … (COVER slots)
 //    {{ profile.background1 }}, …                  (BACKGROUND slots)
 //    {{ profile.video1 }}, {{ profile.video2 }}, … (VIDEO_BACKGROUND slots)
+//    {{ profile.document1 }}, {{ profile.document2 }}, … (CV / document slots)
 //    {% for img in profile.images %}…{% endfor %}  (all AVATAR slots as list)
 //    {% for c   in profile.covers %}…{% endfor %}
 //    {% for b   in profile.backgrounds %}…{% endfor %}
 //    {% for v   in profile.videos %}…{% endfor %}
+//    {% for d   in profile.documents %}…{% endfor %}
 
 import { db } from "../../lib/db";
 
@@ -29,6 +31,7 @@ const SLOT_TYPES = [
   { type: "COVER",            prefix: "cover",       listKey: "covers"      },
   { type: "BACKGROUND",       prefix: "background",  listKey: "backgrounds" },
   { type: "VIDEO_BACKGROUND", prefix: "video",       listKey: "videos"      },
+  { type: "CV",               prefix: "document",    listKey: "documents"   },
 ] as const;
 
 export type ActiveMedia = {
