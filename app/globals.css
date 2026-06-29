@@ -2235,3 +2235,100 @@ button:focus-visible {
   padding-top: 0.75rem;
   border-top: 1px solid var(--adm-line);
 }
+
+/* ---------- Themes manager (search + sort + grid) ---------- */
+/* NOTE: these use a `themelist-` prefix to avoid colliding with the theme DETAIL
+   page's .theme-grid / .theme-card (which are a two-panel layout, defined
+   earlier). Keep these names distinct. */
+.themelist-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.1rem;
+}
+.themelist-search {
+  flex: 1;
+  min-width: 220px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  background: var(--adm-surface);
+  color: var(--adm-ink);
+  font: inherit;
+}
+.themelist-search:focus { outline: 2px solid var(--adm-accent); outline-offset: 1px; }
+.themelist-sort { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--adm-ink-soft); }
+.themelist-sort select {
+  /* Remove the native arrow and draw our own, so it matches the design system
+     across browsers (the default arrow varies and can look misplaced). */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0.45rem 2rem 0.45rem 0.6rem;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  background-color: var(--adm-surface);
+  color: var(--adm-ink);
+  font: inherit;
+  cursor: pointer;
+  /* Custom chevron (down arrow) as an inline SVG background. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%236b7280' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='2,4 6,8 10,4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+}
+.themelist-sort select:focus { outline: 2px solid var(--adm-accent); outline-offset: 1px; }
+.themelist-count { font-size: 0.8rem; color: var(--adm-ink-faint); white-space: nowrap; }
+
+/* List of theme rows. One theme per row, fields laid out horizontally. */
+.themelist-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.themelist-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  box-shadow: var(--adm-shadow);
+}
+.themelist-card-active {
+  border-color: color-mix(in oklab, var(--adm-ok) 45%, var(--adm-line));
+  box-shadow: inset 3px 0 0 var(--adm-ok), var(--adm-shadow);
+}
+.themelist-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  min-width: 180px;
+}
+.themelist-card-name { margin: 0; font-size: 0.98rem; }
+.themelist-card-name a { color: var(--adm-accent); text-decoration: none; }
+.themelist-card-name a:hover { text-decoration: underline; }
+.themelist-card-key {
+  margin: 0;
+  flex: 1;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.76rem;
+  color: var(--adm-ink-faint);
+}
+.themelist-card-meta { display: flex; gap: 0.4rem; margin: 0; }
+.themelist-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+@media (max-width: 560px) {
+  /* On narrow screens, rows stack so nothing gets cramped. */
+  .themelist-card { flex-direction: column; align-items: stretch; gap: 0.4rem; }
+  .themelist-card-head { min-width: 0; }
+  .themelist-card-actions {
+    margin-left: 0;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--adm-line);
+  }
+}

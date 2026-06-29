@@ -32,6 +32,7 @@ export type Theme = {
   isActive: boolean;
   source: ThemeSource;
   expectedFiles: ExpectedFiles;
+  createdAt: Date;
 };
 
 function toTheme(row: {
@@ -41,6 +42,7 @@ function toTheme(row: {
   isActive: boolean;
   source: string;
   expectedFiles?: unknown;
+  createdAt?: Date;
 }): Theme {
   return {
     id: row.id,
@@ -49,6 +51,7 @@ function toTheme(row: {
     isActive: row.isActive,
     source: row.source === "uploaded" ? "uploaded" : "builtin",
     expectedFiles: parseExpectedFiles(row.expectedFiles),
+    createdAt: row.createdAt ?? new Date(0),
   };
 }
 

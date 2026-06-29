@@ -1,16 +1,26 @@
 // app/admin/(protected)/themes/page.tsx — theme switcher + create uploaded themes.
 
-import Link from "next/link";
 import { requireAdmin } from "../../../../lib/auth/require-admin";
 import { listThemes } from "../../../../lib/repos/theme";
 import { activateThemeAction } from "./actions";
 import { CreateThemeForm } from "./create-theme-form";
+import { ThemesManager } from "./themes-manager";
 
 export const metadata = { title: "Themes · Admin" };
 
 export default async function ThemesPage() {
   await requireAdmin();
   const themes = await listThemes();
+
+  // Serialize for the client component (Date -> ISO string).
+  const themeCards = themes.map((t) => ({
+    id: t.id,
+    key: t.key,
+    name: t.name,
+    isActive: t.isActive,
+    source: t.source,
+    createdAt: t.createdAt.toISOString(),
+  }));
 
   return (
     <section className="content-page wide">
@@ -22,46 +32,7 @@ export default async function ThemesPage() {
       {themes.length === 0 ? (
         <p className="muted">No themes registered. Seed adds minimal, showcase, simple-basic.</p>
       ) : (
-        <table className="data-table">
-          <thead>
-            <tr><th>Theme</th><th>Key</th><th>Source</th><th>Status</th><th></th></tr>
-          </thead>
-          <tbody>
-            {themes.map((t) => (
-              <tr key={t.id}>
-                <td>
-                  {t.source === "uploaded"
-                    ? <Link href={`/admin/themes/${t.key}`}>{t.name}</Link>
-                    : t.name}
-                </td>
-                <td><span className="row-sub">{t.key}</span></td>
-                <td>
-                  {t.source === "uploaded"
-                    ? <span className="badge badge-draft">Uploaded</span>
-                    : <span className="row-sub">Built-in</span>}
-                </td>
-                <td>
-                  {t.isActive
-                    ? <span className="badge badge-published">Active</span>
-                    : <span className="badge badge-draft">Inactive</span>}
-                </td>
-                <td className="row-actions">
-                  {t.isActive ? (
-                    <span className="muted">Current</span>
-                  ) : (
-                    <form action={activateThemeAction}>
-                      <input type="hidden" name="key" value={t.key} />
-                      <button type="submit" className="btn-secondary btn-sm">Activate</button>
-                    </form>
-                  )}
-                  {t.source === "uploaded" ? (
-                    <Link href={`/admin/themes/${t.key}`} className="btn-ghost btn-sm">Edit files</Link>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ThemesManager themes={themeCards} activateAction={activateThemeAction} />
       )}
 
       <div className="panel">
