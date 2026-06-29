@@ -7,7 +7,7 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { db } from "../lib/db";
-import { isValidThemeKey, isValidThemeFile, isImageFile, isAllowedUploadName, THEME_FILES } from "../lib/themes/paths";
+import { isValidThemeKey, isValidThemeFile, isImageFile, isAllowedUploadName, isCustomPageFile, THEME_FILES } from "../lib/themes/paths";
 import {
   createUploadedTheme,
   saveThemeFile,
@@ -123,8 +123,25 @@ describe("upload name validation (named files + images)", () => {
       expect(isAllowedUploadName(f)).toBe(true);
     }
   });
+  it("recognizes custom .html pages (auto-routed at /<slug>)", () => {
+    for (const f of ["skills.html", "blog.html", "my-page.html", "index.html"]) {
+      expect(isCustomPageFile(f)).toBe(true);
+      expect(isAllowedUploadName(f)).toBe(true);
+    }
+  });
+  it("rejects custom pages whose slug is reserved or malformed", () => {
+    // Reserved slugs would shadow fixed routes — not allowed as custom pages.
+    for (const f of ["home.html", "about.html", "projects.html", "layout.html", "style.html"]) {
+      expect(isCustomPageFile(f)).toBe(false);
+    }
+    // Bad slug shapes.
+    for (const f of ["-bad.html", "bad-.html", "UPPER.html", "a b.html"]) {
+      expect(isCustomPageFile(f)).toBe(false);
+    }
+  });
   it("rejects unrecognized names", () => {
-    for (const f of ["index.html", "home.htm", "script.js", "readme.md", "data.json"]) {
+    // Not a fixed file, not an image, not a valid custom .html page.
+    for (const f of ["home.htm", "script.js", "readme.md", "data.json"]) {
       expect(isAllowedUploadName(f)).toBe(false);
     }
   });

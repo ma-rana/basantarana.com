@@ -20,7 +20,13 @@ import { Liquid } from "liquidjs";
 import { db } from "../../lib/db";
 import { getActiveMedia } from "./media";
 import { recordView, getLikeCountsBySlug } from "../../lib/repos/engagement";
-import { themeDir, OPTIONAL_PAGE_FILES, type ThemeSource } from "../../lib/themes/paths";
+import {
+  themeDir,
+  OPTIONAL_PAGE_FILES,
+  customPageFileForSlug,
+  isCustomPageFile,
+  type ThemeSource,
+} from "../../lib/themes/paths";
 import { promises as fs } from "fs";
 import path from "path";
 
@@ -112,20 +118,160 @@ async function themeFileExists(dir: string, file: string): Promise<boolean> {
 // Which optional pages exist for this theme, as flags themes use to guard nav
 // links: { about: true/false, contact: ..., project: ... }. home is always the
 // required page so it isn't included here. Themes write {% if pages.about %}.
+//
+// Custom pages are included too: any <slug>.html on disk (that isn't a reserved
+// or fixed file) becomes pages.<slug> = true, so a theme's nav can guard custom
+// links the same way: {% if pages.skills %}<a href="/skills">Skills</a>{% endif %}.
 async function getPageFlags(dir: string): Promise<Record<string, boolean>> {
   const flags: Record<string, boolean> = {};
+
+  // Fixed optional pages.
   await Promise.all(
     OPTIONAL_PAGE_FILES.map(async (file) => {
       const name = file.replace(/\.html$/, ""); // "about.html" -> "about"
       flags[name] = await themeFileExists(dir, file);
     }),
   );
+
+  // Custom pages: scan the theme dir for <slug>.html files that are valid custom
+  // pages (not the fixed/reserved ones), and expose each as pages.<slug>.
+  try {
+    const entries = await fs.readdir(dir);
+    for (const entry of entries) {
+      if (!isCustomPageFile(entry)) continue;
+      const slug = entry.slice(0, -".html".length);
+      flags[slug] = true;
+    }
+  } catch {
+    // No dir / unreadable -> just the fixed flags above.
+  }
+
   return flags;
 }
 
 type SiteData = Awaited<ReturnType<typeof getSiteData>>;
 
+// All custom-page slugs present on disk for this theme, as a list themes can
+// iterate for an auto nav: {% for p in custom_pages %}<a href="/{{p}}">{{p}}</a>.
+async function getCustomPageSlugs(dir: string): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(dir);
+    return entries
+      .filter((e) => isCustomPageFile(e))
+      .map((e) => e.slice(0, -".html".length))
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+// A self-contained, simple 404 document. Public URLs are served by a route
+// handler that returns raw HTML, and a missing/unknown page can't depend on a
+// theme file existing — so this is a standalone page with inline CSS (works with
+// no theme, no layout). Honors the visitor's light/dark preference and offers a
+// clear, well-designed way back home.
+function renderNotFound(): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Page not found</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --surface: #ffffff; --ink: #1f2733; --ink-soft: #5b6675;
+    --ink-faint: #8a94a3; --line: #e3e7ed; --accent: #1f2733; --accent-hover: #334155;
+    --accent-ink: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --surface: #161b22; --ink: #e6eaf0; --ink-soft: #aab3c0;
+      --ink-faint: #79828f; --line: #262d36; --accent: #e6eaf0; --accent-hover: #ffffff;
+      --accent-ink: #0d1117;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    text-align: center;
+    max-width: 400px;
+  }
+  .code {
+    font-size: clamp(4rem, 3rem + 6vw, 6rem);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    margin: 0;
+    color: var(--ink);
+  }
+  h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0.75rem 0 0.5rem;
+    color: var(--ink);
+  }
+  p.msg {
+    margin: 0 auto 2rem;
+    max-width: 34ch;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+  a.home {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--accent);
+    color: var(--accent-ink);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+    border-radius: 10px;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  a.home:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  a.home:active { transform: translateY(0); }
+  a.home:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  a.home svg { width: 1em; height: 1em; }
+  @media (prefers-reduced-motion: reduce) {
+    a.home { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="code">404</p>
+    <h1>Page not found</h1>
+    <p class="msg">The page you&rsquo;re looking for doesn&rsquo;t exist or may have moved.</p>
+    <a class="home" href="/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to home
+    </a>
+  </main>
+</body>
+</html>`;
+}
+
 // Map a URL path to { file, extra }. Returns null if no page matches (404).
+//
+// Order matters: the fixed routes are checked FIRST so a custom page can never
+// shadow "/", "/about", "/contact", or "/projects/<slug>". Any other single
+// top-level segment /<name> is treated as a custom page and mapped to
+// <name>.html (existence is checked by the caller). The reserved-slug guard in
+// customPageFileForSlug stops e.g. /home or /projects from resolving here.
 function resolvePage(urlPath: string, site: SiteData) {
   const clean = urlPath.replace(/\/+$/, "") || "/";
 
@@ -138,6 +284,19 @@ function resolvePage(urlPath: string, site: SiteData) {
     const project = site.projects.find((p) => p.slug === m[1]);
     if (!project) return null; // unknown or non-published slug -> 404
     return { file: "project.html", extra: { project, page: { title: project.title } } };
+  }
+
+  // Custom top-level page: /<slug> -> <slug>.html (if it's a valid, non-reserved
+  // custom slug). A friendly title is derived from the slug ("my-blog" -> "My
+  // blog"); the theme can override via its own markup if it wants.
+  const single = clean.match(/^\/([^/]+)$/);
+  if (single) {
+    const slug = single[1];
+    const file = customPageFileForSlug(slug);
+    if (file) {
+      const title = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, " ");
+      return { file, extra: { page: { title, slug } } };
+    }
   }
 
   return null;
@@ -159,14 +318,14 @@ export async function renderPage(
   const site = await getSiteData();
 
   const match = resolvePage(urlPath, site);
-  if (!match) return { html: "Not found", status: 404 };
+  if (!match) return { html: renderNotFound(), status: 404 };
 
   // The matched page file must actually exist for this theme. If it doesn't
   // (an optional page the theme didn't provide, or a deleted home.html), this
   // URL 404s — we do NOT fall back to another theme's copy.
   const pagePath = path.join(dir, match.file);
   if (!(await themeFileExists(dir, match.file))) {
-    return { html: "Not found", status: 404 };
+    return { html: renderNotFound(), status: 404 };
   }
 
   // Record the view fire-and-forget: do NOT await, so a slow/failed analytics
@@ -178,11 +337,14 @@ export async function renderPage(
     if (slug) void recordView("project", slug);
   }
 
-  // `pages` flags tell the theme which optional pages exist, so its nav can
-  // guard links: {% if pages.about %}<a href="/about">About</a>{% endif %}.
+  // `pages` flags tell the theme which optional/custom pages exist, so its nav
+  // can guard links: {% if pages.about %}<a href="/about">About</a>{% endif %}
+  // and {% if pages.skills %}<a href="/skills">Skills</a>{% endif %}. The full
+  // list of custom slugs is also provided for auto-generated nav.
   const pages = await getPageFlags(dir);
+  const custom_pages = await getCustomPageSlugs(dir);
 
-  const data = { ...site, ...match.extra, pages, formStatus: opts.formStatus ?? "" };
+  const data = { ...site, ...match.extra, pages, custom_pages, formStatus: opts.formStatus ?? "" };
 
   const pageTpl = await fs.readFile(pagePath, "utf-8");
   const content = await engine.parseAndRender(pageTpl, data);

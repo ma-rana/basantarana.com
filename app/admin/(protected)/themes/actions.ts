@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "../../../../lib/auth/require-admin";
 import { db } from "../../../../lib/db";
-import { CreateThemeSchema } from "../../../../lib/schemas/theme";
+import { CreateThemeSchema, ExpectedFilesSchema } from "../../../../lib/schemas/theme";
 import {
   isAllowedUploadName,
   isImageFile,
@@ -20,6 +20,7 @@ import {
   deleteThemeFile,
   getThemeByKey,
   getThemeFileStatus,
+  saveExpectedFiles,
 } from "../../../../lib/repos/theme";
 
 export async function activateThemeAction(formData: FormData): Promise<void> {
@@ -163,4 +164,51 @@ export async function deleteThemeFileAction(formData: FormData): Promise<void> {
   await deleteThemeFile(key, filename);
   revalidatePath(`/admin/themes/${key}`);
   revalidatePath("/");
+}
+
+export type ExpectedFilesState = { ok: boolean; error: string | null };
+
+// Save the author-defined "expected files" checklist for an uploaded theme. The
+// client posts the list as JSON under "expected". We validate the shape with
+// Zod, drop blank rows, de-duplicate by filename (last label wins), and persist.
+// This list is a planning/tracking aid: it changes only what the Files panel
+// shows, never how the theme renders (the engine still reads its fixed files).
+export async function saveExpectedFilesAction(
+  _prev: ExpectedFilesState,
+  formData: FormData,
+): Promise<ExpectedFilesState> {
+  await requireAdmin();
+  const key = (formData.get("key") as string) || "";
+
+  const theme = await getThemeByKey(key);
+  if (!theme) return { ok: false, error: "Theme not found." };
+  if (theme.source !== "uploaded") {
+    return { ok: false, error: "Built-in themes can't be edited." };
+  }
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse((formData.get("expected") as string) || "[]");
+  } catch {
+    return { ok: false, error: "Could not read the checklist." };
+  }
+
+  const parsed = ExpectedFilesSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid checklist." };
+  }
+
+  // De-duplicate by filename (case-insensitive), keeping the last occurrence so
+  // an edited label wins. Preserves input order otherwise.
+  const byName = new Map<string, { name: string; label: string }>();
+  for (const entry of parsed.data) {
+    byName.set(entry.name.toLowerCase(), entry);
+  }
+  const cleaned = [...byName.values()];
+
+  const result = await saveExpectedFiles(key, cleaned);
+  if (!result.ok) return { ok: false, error: result.error ?? "Could not save." };
+
+  revalidatePath(`/admin/themes/${key}`);
+  return { ok: true, error: null };
 }

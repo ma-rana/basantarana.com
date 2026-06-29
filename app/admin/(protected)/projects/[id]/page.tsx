@@ -3,6 +3,7 @@
 // a (prev, formData) action) can call it.
 
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { requireAdmin } from "../../../../../lib/auth/require-admin";
 import { getProjectById } from "../../../../../lib/repos/project";
 import { ProjectForm } from "../project-form";
@@ -23,9 +24,13 @@ export default async function EditProjectPage({
   const action = updateProjectAction.bind(null, id);
 
   return (
-    <section className="content-page">
-      <header className="content-head">
-        <h1>Edit project</h1>
+    <section className="content-page project-page">
+      <header className="content-head row">
+        <div>
+          <h1>Edit project</h1>
+          <p className="row-sub">{project.title}</p>
+        </div>
+        <Link href="/admin/projects" className="btn-back">All projects</Link>
       </header>
       <ProjectForm action={action} project={project} submitLabel="Save changes" />
     </section>

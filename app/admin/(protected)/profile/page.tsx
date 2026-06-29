@@ -13,10 +13,10 @@ export default async function ProfilePage() {
   const profile = await getProfile();
 
   return (
-    <section className="content-page">
+    <section className="content-page profile-page">
       <header className="content-head">
         <h1>Profile</h1>
-        <p>Your core details and bio. Shown across the public site.</p>
+        <p>Your name, contact details, and bio — shown across the public site.</p>
       </header>
       <ProfileForm profile={profile} />
     </section>

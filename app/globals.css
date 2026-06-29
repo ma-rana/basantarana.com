@@ -309,65 +309,126 @@ body {
 
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 0.9rem;
   margin-top: 0.5rem;
 }
+/* Each metric is a link-card with a thin status-colored accent stripe down the
+   left, a large tabular value, and a quiet label. The whole card lifts on hover
+   and its accent brightens — a clear, professional "clickable stat" affordance. */
 .metric-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  padding: 1.1rem 1.2rem;
+  gap: 0.35rem;
+  padding: 1.1rem 1.2rem 1.1rem 1.4rem;
   background: var(--adm-surface);
   border: 1px solid var(--adm-line);
   border-radius: var(--adm-radius);
   text-decoration: none;
   color: inherit;
   box-shadow: var(--adm-shadow);
-  transition: border-color 0.14s ease, transform 0.14s ease;
+  overflow: hidden;
+  transition: border-color 0.14s ease, transform 0.14s ease, box-shadow 0.14s ease;
+}
+/* The accent stripe. --mc is set per tone below. */
+.metric-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--mc, var(--adm-accent));
+  opacity: 0.7;
+  transition: opacity 0.14s ease, width 0.14s ease;
 }
 .metric-card:hover {
   border-color: var(--adm-line-strong);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.08);
 }
+.metric-card:hover::before { opacity: 1; width: 4px; }
+/* Per-tone accent color for the stripe. */
+.metric-card.tone-accent { --mc: var(--adm-accent); }
+.metric-card.tone-ok { --mc: var(--adm-ok); }
+.metric-card.tone-warn { --mc: var(--adm-warn); }
 .metric-value {
-  font-size: clamp(1.6rem, 1.3rem + 1vw, 2rem);
-  font-weight: 680;
+  font-size: clamp(1.7rem, 1.3rem + 1.1vw, 2.1rem);
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--adm-ink);
+  font-variant-numeric: tabular-nums;
 }
 .metric-label {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: var(--adm-ink-soft);
+  font-weight: 500;
 }
 .dashboard-subhead {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--adm-ink-faint);
-  margin: 2rem 0 0.75rem;
-  font-weight: 650;
+  margin: 2rem 0 0.85rem;
+  font-weight: 700;
 }
-.quick-actions {
+
+/* Quick actions — deliberate entry-point cards with a label, a one-line
+   description, and an arrow that slides on hover. Replaces the old flat chips. */
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.action-card {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-.quick-action {
-  padding: 0.55rem 0.95rem;
-  border-radius: var(--adm-radius-sm);
-  border: 1px solid var(--adm-line-strong);
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1rem 2.2rem 1rem 1.1rem;
+  border-radius: var(--adm-radius);
+  border: 1px solid var(--adm-line);
   background: var(--adm-surface);
-  color: var(--adm-ink);
+  color: inherit;
   text-decoration: none;
-  font-size: 0.88rem;
-  font-weight: 550;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  box-shadow: var(--adm-shadow);
+  transition: border-color 0.14s ease, transform 0.14s ease, background 0.14s ease;
 }
-.quick-action:hover {
-  background: var(--adm-accent-tint);
+.action-card:hover {
   border-color: var(--adm-accent);
+  background: var(--adm-accent-tint);
+  transform: translateY(-2px);
+}
+.action-card-label {
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--adm-ink);
+  letter-spacing: -0.01em;
+}
+.action-card-desc {
+  font-size: 0.8rem;
+  color: var(--adm-ink-soft);
+  line-height: 1.4;
+}
+.action-card-arrow {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  font-size: 1rem;
+  color: var(--adm-ink-faint);
+  transition: transform 0.14s ease, color 0.14s ease;
+}
+.action-card:hover .action-card-arrow {
+  transform: translateX(3px);
+  color: var(--adm-accent-strong);
+}
+@media (prefers-reduced-motion: reduce) {
+  .metric-card, .metric-card::before, .action-card, .action-card-arrow {
+    transition: none;
+  }
 }
 
 /* ---------- Login screen ---------- */
@@ -503,21 +564,24 @@ button:focus-visible {
 }
 
 /* Primary — deeper slate fill. The one main action per view. In dark mode the
-   fill is light, so text flips to the dark surface color for contrast. */
+   fill is light, so text flips to the dark surface color for contrast.
+   NOTE: `.content-form button` is scoped to DIRECT submit-style buttons. Custom
+   button controls inside the form (segmented status, block palette, block
+   reorder, tag chips, toggle) opt out via :not() so they keep their own look. */
 .login-form button,
-.content-form button,
+.content-form button:not(.segmented-option):not(.block-add-btn):not(.block-controls button):not(.tag-chip button):not(.tag-add button):not(.toggle-card *),
 .btn-primary {
   background: var(--adm-primary);
   color: #fff;
 }
 .login-form button:hover,
-.content-form button:hover,
+.content-form button:not(.segmented-option):not(.block-add-btn):not(.block-controls button):not(.tag-chip button):not(.tag-add button):not(.toggle-card *):hover,
 .btn-primary:hover {
   background: var(--adm-primary-hover);
 }
 @media (prefers-color-scheme: dark) {
   .login-form button,
-  .content-form button,
+  .content-form button:not(.segmented-option):not(.block-add-btn):not(.block-controls button):not(.tag-chip button):not(.tag-add button):not(.toggle-card *),
   .btn-primary {
     color: var(--adm-bg);
   }
@@ -709,6 +773,40 @@ button:focus-visible {
   color: var(--adm-ink-soft);
   font-weight: 600;
 }
+.field-group-note {
+  margin: -0.25rem 0 0.25rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--adm-ink-soft);
+  max-width: 62ch;
+}
+
+/* ---------- Profile editor ---------- */
+.profile-page { max-width: 760px; }
+.profile-form { gap: 1.5rem; }
+/* Label line that carries a right-aligned character counter. */
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.char-count {
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--adm-ink-faint);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.char-count.is-near { color: var(--adm-warn); }
+/* Footer groups the save button with its status message on one line. */
+.form-footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.form-footer button { align-self: auto; }
 .field-row {
   display: flex;
   gap: 1rem;
@@ -1012,66 +1110,428 @@ button:focus-visible {
 .block-controls .btn-icon { padding: 0; }
 .block-controls .btn-ghost { border-color: transparent; }
 
-/* ---------- Block editor ---------- */
+/* ---------- Block editor (project content) ---------- */
+.project-page { max-width: 820px; }
+.project-form { gap: 1.5rem; }
+/* Empty-state lines for the tag + content groups. */
+.tags-empty,
+.blocks-empty {
+  font-size: 0.85rem;
+  margin: 0;
+}
+/* Stack of block cards. */
+.blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
 .block-editor {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  padding: 0.85rem;
+  gap: 0.7rem;
+  padding: 0.9rem 1rem;
   border: 1px solid var(--adm-line);
-  border-radius: var(--adm-radius-sm);
+  border-radius: var(--adm-radius);
   background: var(--adm-surface);
+  box-shadow: var(--adm-shadow);
 }
 .block-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--adm-line);
 }
-.block-head strong {
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.06em;
-  color: var(--adm-ink-faint);
+/* The block's type label, prefixed with its position number. */
+.block-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--adm-ink);
 }
-.block-controls { display: flex; gap: 0.3rem; }
+.block-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.4rem;
+  border-radius: var(--adm-radius-pill);
+  background: var(--adm-accent-tint);
+  color: var(--adm-accent-strong);
+  font-size: 0.74rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.block-controls { display: flex; gap: 0.3rem; align-items: center; }
+/* Inner fields stack vertically with their own spacing. */
+.block-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 .block-editor input,
 .block-editor textarea,
 .block-editor select {
   padding: 0.5rem 0.6rem;
   border-radius: var(--adm-radius-sm);
   border: 1px solid var(--adm-line-strong);
-  background: var(--adm-surface);
+  background: var(--adm-surface-2);
   color: var(--adm-ink);
   font: inherit;
 }
+.block-editor input:focus-visible,
+.block-editor textarea:focus-visible,
+.block-editor select:focus-visible {
+  background: var(--adm-surface);
+}
+/* Code blocks: monospace input so snippets read correctly while editing. */
+.block-code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: pre;
+  overflow-wrap: normal;
+  tab-size: 2;
+}
+
+/* The typed "add block" palette below the block list. */
+.block-palette {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--adm-line-strong);
+}
+.block-palette-label {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 650;
+  color: var(--adm-ink-faint);
+}
 .block-add { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.block-add-btn {
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--adm-radius-sm);
+  border: 1px solid var(--adm-line-strong);
+  background: var(--adm-surface);
+  color: var(--adm-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.block-add-btn:hover {
+  background: var(--adm-accent-tint);
+  border-color: var(--adm-accent);
+  color: var(--adm-accent-strong);
+}
+
+/* ---------- Publishing controls ---------- */
+/* Segmented status picker: three labeled options, each carrying its own status
+   color. The SELECTED option tints to match the status (neutral / green / amber)
+   so the choice reads at a glance and matches the list badges. Each option
+   defines --seg (the status hue) and --seg-tint (a soft fill); the active rules
+   then reference those, so one set of active rules colors all three correctly. */
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+@media (max-width: 560px) {
+  .segmented { grid-template-columns: 1fr; }
+}
+.segmented-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.7rem 0.8rem;
+  border: 1.5px solid var(--seg-edge, var(--adm-line-strong));
+  border-radius: var(--adm-radius-sm);
+  /* A faint recessed surface so all three read as equal cards, with a clearly
+     visible status-colored border. The selected one stands out via a stronger
+     fill + inset ring (below), keeping a clear hierarchy. */
+  background: var(--adm-surface-2);
+  color: var(--adm-ink);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+/* Per-status hue + soft tint + a status-colored resting border. Draft is a calm
+   slate-blue; published green; archived amber — matching the list badges.
+   --seg-edge is a softened mix of the status hue so the resting borders are
+   visible but not loud; hover/active bring the full --seg color. */
+.segmented-option.status-draft {
+  --seg: var(--adm-accent);
+  --seg-edge: color-mix(in oklab, var(--adm-accent) 55%, var(--adm-line-strong));
+  --seg-tint: color-mix(in oklab, var(--adm-accent) 16%, var(--adm-surface));
+}
+.segmented-option.status-published {
+  --seg: var(--adm-ok);
+  --seg-edge: color-mix(in oklab, var(--adm-ok) 55%, var(--adm-line-strong));
+  --seg-tint: color-mix(in oklab, var(--adm-ok) 18%, var(--adm-surface));
+}
+.segmented-option.status-archived {
+  --seg: var(--adm-warn);
+  --seg-edge: color-mix(in oklab, var(--adm-warn) 55%, var(--adm-line-strong));
+  --seg-tint: color-mix(in oklab, var(--adm-warn) 18%, var(--adm-surface));
+}
+.segmented-option:hover {
+  border-color: var(--seg);
+  background: var(--adm-surface);
+}
+.segmented-option.is-active {
+  border-color: var(--seg);
+  background: var(--seg-tint);
+  box-shadow: inset 0 0 0 1px var(--seg);
+}
+.segmented-dot {
+  flex-shrink: 0;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-top: 0.28rem;
+  border-radius: 50%;
+  /* Hollow until selected, then fills with the status color. */
+  border: 1.5px solid var(--seg);
+  background: transparent;
+  transition: background 0.12s ease;
+}
+.segmented-option.is-active .segmented-dot { background: var(--seg); }
+.segmented-text { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.segmented-label { font-size: 0.88rem; font-weight: 650; color: var(--adm-ink); }
+.segmented-blurb { font-size: 0.74rem; line-height: 1.35; color: var(--adm-ink-soft); }
+
+/* Featured toggle: a bordered row with a switch on the right. The native
+   checkbox is visually hidden; the .toggle-switch is the visible control. When
+   on, the whole card and the switch adopt the published-green accent so "on"
+   reads as an active, positive state rather than neutral slate. */
+.toggle-card {
+  --tog: var(--adm-ok);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--adm-line-strong);
+  border-radius: var(--adm-radius-sm);
+  background: var(--adm-surface);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.toggle-card:hover { border-color: var(--tog); }
+.toggle-card.is-on {
+  border-color: var(--tog);
+  background: color-mix(in oklab, var(--adm-ok) 10%, transparent);
+}
+.toggle-card-text { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.toggle-card-label { font-size: 0.9rem; font-weight: 650; color: var(--adm-ink); }
+.toggle-card-blurb { font-size: 0.78rem; line-height: 1.4; color: var(--adm-ink-soft); }
+.toggle-card-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.toggle-switch {
+  flex-shrink: 0;
+  position: relative;
+  width: 2.6rem;
+  height: 1.5rem;
+  border-radius: var(--adm-radius-pill);
+  background: var(--adm-line-strong);
+  transition: background 0.16s ease;
+}
+.toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 0.18rem;
+  left: 0.18rem;
+  width: 1.14rem;
+  height: 1.14rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.3);
+  transition: transform 0.16s ease;
+}
+.toggle-card.is-on .toggle-switch { background: var(--tog); }
+.toggle-card.is-on .toggle-switch::after { transform: translateX(1.1rem); }
+/* The knob stays white in both themes for contrast against the colored track. */
+.toggle-card.is-on .toggle-switch::after { background: #fff; }
+/* Keyboard focus ring on the hidden checkbox surfaces on the switch. */
+.toggle-card-input:focus-visible ~ .toggle-switch {
+  outline: 2px solid var(--adm-focus);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toggle-switch, .toggle-switch::after { transition: none; }
+}
 
 /* ---------- Stat / engagement cards ---------- */
 .stat-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 1rem;
   margin-top: 1rem;
 }
+/* Same accent-stripe treatment as the dashboard metric cards, so the two pages
+   feel like one system. --mc is the stripe color, set per tone. */
 .stat-card {
+  position: relative;
   border: 1px solid var(--adm-line);
   border-radius: var(--adm-radius);
-  padding: 1.1rem 1.2rem;
+  padding: 1.1rem 1.2rem 1.1rem 1.4rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   background: var(--adm-surface);
   box-shadow: var(--adm-shadow);
+  overflow: hidden;
 }
+.stat-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--mc, var(--adm-accent));
+  opacity: 0.7;
+}
+.stat-card.tone-accent { --mc: var(--adm-accent); }
+.stat-card.tone-ok { --mc: var(--adm-ok); }
+.stat-card.tone-warn { --mc: var(--adm-warn); }
 .stat-card-value {
-  font-size: clamp(1.5rem, 1.2rem + 1vw, 1.9rem);
-  font-weight: 680;
+  font-size: clamp(1.6rem, 1.25rem + 1.1vw, 2.05rem);
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  color: var(--adm-ink);
+  font-variant-numeric: tabular-nums;
+}
+.stat-card-label { font-size: 0.82rem; color: var(--adm-ink-soft); font-weight: 500; }
+
+/* Per-project leaderboard. Each row: rank badge, title with a proportional
+   traffic bar, then views + likes as paired stats. Replaces the plain table so
+   the busiest projects read at a glance. */
+.engagement-panel .panel-head h2 {
+  font-size: 1.05rem;
+  font-weight: 680;
+  letter-spacing: -0.01em;
   color: var(--adm-ink);
 }
-.stat-card-label { font-size: 0.8rem; color: var(--adm-ink-soft); }
+.rank-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--adm-line);
+}
+.rank-row:last-child { border-bottom: none; }
+.rank-pos {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line);
+  color: var(--adm-ink-soft);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+/* Top three get a subtle accent badge. */
+.rank-row:nth-child(1) .rank-pos {
+  background: color-mix(in oklab, var(--adm-warn) 18%, var(--adm-surface));
+  border-color: color-mix(in oklab, var(--adm-warn) 40%, var(--adm-line-strong));
+  color: var(--adm-warn);
+}
+.rank-row:nth-child(2) .rank-pos,
+.rank-row:nth-child(3) .rank-pos {
+  background: var(--adm-accent-tint);
+  border-color: var(--adm-line-strong);
+  color: var(--adm-accent-strong);
+}
+.rank-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.rank-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--adm-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rank-bar {
+  display: block;
+  height: 5px;
+  border-radius: var(--adm-radius-pill);
+  background: var(--adm-surface-2);
+  overflow: hidden;
+}
+.rank-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--adm-accent);
+  min-width: 3px;
+}
+.rank-row:nth-child(1) .rank-bar-fill { background: var(--adm-warn); }
+.rank-stats {
+  flex-shrink: 0;
+  display: flex;
+  gap: 1.5rem;
+}
+.rank-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  min-width: 3rem;
+}
+.rank-stat-value {
+  font-size: 1rem;
+  font-weight: 680;
+  color: var(--adm-ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.rank-stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--adm-ink-faint);
+  font-weight: 600;
+}
+@media (max-width: 560px) {
+  .rank-stats { gap: 1rem; }
+  .rank-stat { min-width: 2.5rem; }
+}
 
 /* ---------- Theme detail page (/themes/[key]) ---------- */
 .theme-title { display: flex; flex-direction: column; gap: 0.4rem; }
@@ -1099,6 +1559,10 @@ button:focus-visible {
 }
 @media (min-width: 880px) {
   .theme-grid { grid-template-columns: 1.3fr 1fr; align-items: start; }
+  /* When the Files checklist is hidden (no expected files declared yet), the
+     upload panel is the only child — let it span the full width instead of
+     sitting in a narrow first column. */
+  .theme-grid-single { grid-template-columns: 1fr; }
 }
 .theme-panel { margin-top: 0; }
 
@@ -1251,6 +1715,148 @@ button:focus-visible {
   color: var(--adm-ink-soft);
 }
 
+/* ---------- Expected-files checklist editor ---------- */
+/* A full-width panel below the two-column grid. The editor lets the author
+   declare which files this theme should have (engine files + custom tracked
+   names), each shown present/missing. */
+.expected-panel { margin-top: 1.25rem; }
+.expected-editor { display: flex; flex-direction: column; gap: 1rem; }
+.expected-empty {
+  margin: 0;
+  padding: 1.1rem 1.2rem;
+  border: 1.5px dashed var(--adm-line-strong);
+  border-radius: var(--adm-radius);
+  text-align: center;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+.expected-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+  overflow: hidden;
+}
+.expected-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--adm-line);
+  background: var(--adm-surface);
+}
+.expected-row:last-child { border-bottom: none; }
+.expected-dot {
+  flex-shrink: 0;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--adm-line-strong);
+  background: transparent;
+}
+.expected-dot.is-present {
+  background: var(--adm-ok);
+  border-color: var(--adm-ok);
+}
+.expected-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.expected-name {
+  font-size: 0.84rem;
+  color: var(--adm-ink);
+  flex-shrink: 0;
+}
+.expected-label-input {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius-sm);
+  background: var(--adm-surface-2);
+  color: var(--adm-ink);
+  font: inherit;
+  font-size: 0.82rem;
+}
+.expected-label-input:focus-visible { background: var(--adm-surface); }
+.expected-flags {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.expected-state { font-size: 0.78rem; color: var(--adm-ink-faint); }
+.expected-row[data-present="true"] .expected-state { color: var(--adm-ok); }
+.expected-trackonly { flex-shrink: 0; cursor: help; }
+/* Route badge: shows the public URL a custom <slug>.html page serves at. Uses
+   the published-green pill, monospace, so it reads as "this is a live page". */
+.expected-routebadge {
+  flex-shrink: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.68rem;
+  cursor: default;
+}
+
+/* Quick-add chips for the standard engine files. */
+.expected-quickadd {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
+}
+.expected-quickadd-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--adm-ink-faint);
+}
+.expected-quickadd-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+/* Custom add row: filename + label + add button. */
+.expected-add { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.expected-add-name,
+.expected-add-label {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--adm-line-strong);
+  border-radius: var(--adm-radius-sm);
+  background: var(--adm-surface);
+  color: var(--adm-ink);
+  font: inherit;
+  font-size: 0.85rem;
+}
+.expected-add-name { flex: 0 0 12rem; font-family: var(--font-mono), monospace; }
+.expected-add-label { flex: 1; min-width: 10rem; }
+@media (max-width: 560px) {
+  .expected-add-name, .expected-add-label { flex: 1 1 100%; }
+}
+.expected-footer { margin-top: 0.25rem; }
+.expected-add-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--adm-ink-faint);
+}
+.expected-add-hint code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.74rem;
+  padding: 0.04rem 0.3rem;
+  border-radius: 5px;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line);
+  color: var(--adm-ink-soft);
+}
+
 /* Action bar — primary action left, destructive pinned right */
 .theme-actionbar {
   display: flex;
@@ -1269,32 +1875,39 @@ button:focus-visible {
 }
 
 /* ---------- Media admin ---------- */
+.media-tabwrap { margin-top: 0.5rem; }
+/* Segmented pill tabs — a contained control on a recessed track, so the media
+   type switcher reads as a deliberate, professional toggle rather than bare
+   underlined text. */
 .media-tabs {
-  display: flex;
+  display: inline-flex;
   gap: 0.25rem;
-  border-bottom: 2px solid var(--adm-line);
+  padding: 0.25rem;
   margin-bottom: 1.5rem;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line);
+  border-radius: var(--adm-radius);
   overflow-x: auto;
+  max-width: 100%;
 }
 .media-tab {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.1rem;
   border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
+  border-radius: var(--adm-radius-sm);
   background: transparent;
   color: var(--adm-ink-soft);
   font: inherit;
   font-size: 0.9rem;
-  font-weight: 550;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  border-radius: var(--adm-radius-sm) var(--adm-radius-sm) 0 0;
+  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
 }
-.media-tab:hover { color: var(--adm-ink); background: var(--adm-surface-2); }
+.media-tab:hover { color: var(--adm-ink); }
 .media-tab-active {
-  color: var(--adm-accent-strong);
-  font-weight: 650;
-  border-bottom-color: var(--adm-accent);
+  color: var(--adm-ink);
+  background: var(--adm-surface);
+  box-shadow: var(--adm-shadow);
 }
 .media-panel { outline: none; }
 .media-panel[hidden] { display: none; }
@@ -1309,37 +1922,47 @@ button:focus-visible {
 }
 .media-group-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
 .media-group-title {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 680;
   color: var(--adm-ink);
   letter-spacing: -0.01em;
 }
 .media-group-count {
   font-size: 0.74rem;
-  font-weight: 600;
-  color: var(--adm-ink-faint);
-  padding: 0.12rem 0.5rem;
+  font-weight: 650;
+  color: var(--adm-ink-soft);
+  padding: 0.18rem 0.6rem;
   border-radius: var(--adm-radius-pill);
   background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line);
   white-space: nowrap;
 }
 .media-group-hint {
-  margin: 0.25rem 0 1rem;
+  margin: 0.4rem 0 1.1rem;
   font-size: 0.84rem;
   line-height: 1.5;
   color: var(--adm-ink-soft);
   max-width: 70ch;
 }
+.media-group-hint code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  padding: 0.04rem 0.3rem;
+  border-radius: 5px;
+  background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line);
+  color: var(--adm-ink-soft);
+}
 .media-empty {
   margin: 0 0 1rem;
-  padding: 1.1rem;
-  border: 1px dashed var(--adm-line-strong);
-  border-radius: var(--adm-radius-sm);
+  padding: 1.5rem 1.1rem;
+  border: 1.5px dashed var(--adm-line-strong);
+  border-radius: var(--adm-radius);
   color: var(--adm-ink-faint);
   font-size: 0.85rem;
   text-align: center;
@@ -1348,27 +1971,47 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--adm-line);
-  border-radius: var(--adm-radius-sm);
+  border-radius: var(--adm-radius);
   overflow: hidden;
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
   background: var(--adm-surface);
 }
 .media-asset-row {
   display: flex;
   align-items: center;
   gap: 0.9rem;
-  padding: 0.65rem 0.9rem;
+  padding: 0.75rem 0.9rem;
   border-bottom: 1px solid var(--adm-line);
+  transition: background 0.12s ease;
 }
 .media-asset-row:last-child { border-bottom: none; }
-.media-asset-active { background: var(--adm-accent-tint); }
+.media-asset-row:hover { background: var(--adm-surface-2); }
+/* Active asset: a soft green wash + a green accent stripe down the left so the
+   live asset of each type is unmistakable. */
+.media-asset-active {
+  position: relative;
+  background: color-mix(in oklab, var(--adm-ok) 7%, var(--adm-surface));
+  box-shadow: inset 3px 0 0 var(--adm-ok);
+}
+.media-asset-active:hover {
+  background: color-mix(in oklab, var(--adm-ok) 11%, var(--adm-surface));
+}
 .media-thumb-wrap {
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   border-radius: var(--adm-radius-sm);
   overflow: hidden;
   background: var(--adm-surface-2);
+  border: 1px solid var(--adm-line);
+  /* Checkerboard so transparent PNGs read clearly. */
+  background-image:
+    linear-gradient(45deg, var(--adm-line) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--adm-line) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--adm-line) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--adm-line) 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
 }
 .media-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
 .media-asset-info {
@@ -1377,16 +2020,20 @@ button:focus-visible {
   align-items: center;
   gap: 0.6rem;
   min-width: 0;
+  flex-wrap: wrap;
 }
 .media-filename {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
+  font-weight: 550;
+  color: var(--adm-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 .media-upload-area {
-  margin-top: 0.5rem;
-  padding-top: 1rem;
+  margin-top: 0.25rem;
+  padding-top: 1.1rem;
   border-top: 1px solid var(--adm-line);
 }
 .media-upload-form {

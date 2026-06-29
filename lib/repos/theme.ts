@@ -13,10 +13,15 @@ import {
   themeFilePath,
   isValidThemeKey,
   isImageFile,
+  isCustomPageFile,
   THEME_FILES,
   type ThemeSource,
   type ThemeFile,
 } from "../themes/paths";
+import {
+  parseExpectedFiles,
+  type ExpectedFiles,
+} from "../schemas/theme";
 
 const liquid = new Liquid({ strictVariables: false, strictFilters: false });
 
@@ -26,10 +31,25 @@ export type Theme = {
   name: string;
   isActive: boolean;
   source: ThemeSource;
+  expectedFiles: ExpectedFiles;
 };
 
-function toTheme(row: { id: string; key: string; name: string; isActive: boolean; source: string }): Theme {
-  return { ...row, source: row.source === "uploaded" ? "uploaded" : "builtin" };
+function toTheme(row: {
+  id: string;
+  key: string;
+  name: string;
+  isActive: boolean;
+  source: string;
+  expectedFiles?: unknown;
+}): Theme {
+  return {
+    id: row.id,
+    key: row.key,
+    name: row.name,
+    isActive: row.isActive,
+    source: row.source === "uploaded" ? "uploaded" : "builtin",
+    expectedFiles: parseExpectedFiles(row.expectedFiles),
+  };
 }
 
 export async function listThemes(): Promise<Theme[]> {
@@ -74,6 +94,96 @@ export async function getThemeFileStatus(
     }),
   );
   return status;
+}
+
+// One row of the author-defined expected-files checklist, resolved against what
+// is actually uploaded. `kind` classifies the file's role:
+//   - "fixed"   : one of the six files the engine reads (home/about/contact/
+//                 project/layout.html, style.css) — drives rendering.
+//   - "page"    : a custom <slug>.html that auto-routes at /<slug>.
+//   - "tracking": any other name (e.g. blog.css, partial.html-as-include) that
+//                 the engine doesn't route on its own — reference only.
+// `routePath` is the public URL for a custom page ("/skills"), else null.
+export type ExpectedFileKind = "fixed" | "page" | "tracking";
+export type ExpectedFileStatus = {
+  name: string;
+  label: string;
+  present: boolean;
+  kind: ExpectedFileKind;
+  routePath: string | null;
+};
+
+// Classify an expected filename into its role + public route (if any).
+// Fixed page files carry their own known route (home.html -> "/", about.html ->
+// "/about", etc.); custom <slug>.html pages route at "/<slug>"; layout.html and
+// style.css have no public route of their own; anything else is tracking-only.
+const FIXED_ROUTES: Record<string, string | null> = {
+  "home.html": "/",
+  "about.html": "/about",
+  "contact.html": "/contact",
+  "project.html": "/projects/…",
+  "layout.html": null,
+  "style.css": null,
+};
+function classifyExpectedFile(name: string): { kind: ExpectedFileKind; routePath: string | null } {
+  if ((THEME_FILES as readonly string[]).includes(name)) {
+    return { kind: "fixed", routePath: FIXED_ROUTES[name] ?? null };
+  }
+  if (isCustomPageFile(name)) {
+    const slug = name.slice(0, -".html".length);
+    return { kind: "page", routePath: `/${slug}` };
+  }
+  return { kind: "tracking", routePath: null };
+}
+
+// Build the checklist for the theme's OWN declared files. Reads the expected
+// list from the row, checks each name against the uploaded dir, and classifies
+// each (fixed engine file / custom routed page / tracking-only). Names are
+// checked against a single dir listing (not themeFilePath, which only allows the
+// fixed names + images — custom names like skills.html must work too).
+export async function getExpectedFileStatus(
+  key: string,
+  source: ThemeSource,
+  expected: ExpectedFiles,
+): Promise<ExpectedFileStatus[]> {
+  if (!isValidThemeKey(key)) return [];
+  const dir = themeDir(key, source);
+
+  // List the dir once; membership test per expected name.
+  let present: Set<string>;
+  try {
+    present = new Set(await fs.readdir(dir));
+  } catch {
+    present = new Set();
+  }
+
+  return expected.map((e) => {
+    const { kind, routePath } = classifyExpectedFile(e.name);
+    return {
+      name: e.name,
+      label: e.label,
+      present: present.has(e.name),
+      kind,
+      routePath,
+    };
+  });
+}
+
+// Persist a theme's expected-files checklist (uploaded themes only). The caller
+// passes an already-validated + de-duplicated list (see the action).
+export async function saveExpectedFiles(
+  key: string,
+  expected: ExpectedFiles,
+): Promise<{ ok: boolean; error?: string }> {
+  const row = await db.theme.findUnique({ where: { key } });
+  if (!row || row.source !== "uploaded") {
+    return { ok: false, error: "Theme not found or not editable." };
+  }
+  await db.theme.update({
+    where: { key },
+    data: { expectedFiles: expected },
+  });
+  return { ok: true };
 }
 
 export type SaveFileResult = { ok: true } | { ok: false; error: string };

@@ -3,23 +3,18 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireAdmin } from "../../../../../lib/auth/require-admin";
-import { getThemeByKey, getThemeFileStatus, listThemeFiles } from "../../../../../lib/repos/theme";
-import { THEME_FILES, isRequiredThemeFile } from "../../../../../lib/themes/paths";
+import {
+  getThemeByKey,
+  getThemeFileStatus,
+  listThemeFiles,
+  getExpectedFileStatus,
+} from "../../../../../lib/repos/theme";
+import { isImageFile } from "../../../../../lib/themes/paths";
 import { activateThemeAction, deleteThemeAction } from "../actions";
 import { ThemeUpload } from "./theme-upload";
+import { ExpectedFilesEditor } from "./expected-files-editor";
 
 export const metadata = { title: "Edit theme · Admin" };
-
-// What each named theme file does, shown in the status checklist so the role of
-// every slot is clear without leaving the page.
-const FILE_ROLE: Record<string, string> = {
-  "home.html": "Landing page",
-  "layout.html": "Page wrapper (optional)",
-  "about.html": "About page",
-  "contact.html": "Contact page",
-  "project.html": "Project detail page",
-  "style.css": "Stylesheet",
-};
 
 export default async function ThemeFilesPage({
   params,
@@ -39,10 +34,17 @@ export default async function ThemeFilesPage({
   const canActivate = status["home.html"];
   const uploadedFiles = await listThemeFiles(key, "uploaded");
 
-  // Any uploaded names that aren't one of the six roles are images/decoration.
-  const namedSet = new Set<string>(THEME_FILES);
-  const imageFiles = uploadedFiles.filter((f) => !namedSet.has(f));
-  const presentCount = THEME_FILES.filter((f) => status[f]).length;
+  // The author's declared checklist for THIS theme (real engine files + custom
+  // tracked names), each resolved to present/missing against the uploaded dir.
+  // The Files panel appears only when this list is non-empty.
+  const expectedStatus = await getExpectedFileStatus(key, "uploaded", theme.expectedFiles);
+  const hasExpected = expectedStatus.length > 0;
+  const expectedPresent = expectedStatus.filter((e) => e.present).length;
+
+  // Of the uploaded files, separate true images (decoration) from everything
+  // else. Custom pages (skills.html etc.) are NOT images — they're real routed
+  // pages — so only count files that pass the image check.
+  const imageFiles = uploadedFiles.filter((f) => isImageFile(f));
 
   return (
     <section className="content-page wide">
@@ -59,7 +61,7 @@ export default async function ThemeFilesPage({
         </div>
       </header>
 
-      <div className="theme-grid">
+      <div className={`theme-grid${hasExpected ? "" : " theme-grid-single"}`}>
         {/* Upload panel */}
         <div className="panel theme-panel">
           <div className="panel-head">
@@ -77,38 +79,61 @@ export default async function ThemeFilesPage({
           />
         </div>
 
-        {/* File status checklist */}
-        <div className="panel theme-panel">
-          <div className="panel-head">
-            <h2>Files</h2>
-            <p>{presentCount} of {THEME_FILES.length} named files present.</p>
-          </div>
-          <ul className="file-status">
-            {THEME_FILES.map((f) => {
-              const present = status[f];
-              const required = isRequiredThemeFile(f);
-              return (
-                <li key={f} className="file-status-row" data-present={present}>
-                  <span className={`file-status-dot${present ? " is-present" : ""}`} aria-hidden="true" />
+        {/* File status checklist — only shown once the author has declared
+            expected files. Until then this panel is hidden entirely. */}
+        {hasExpected ? (
+          <div className="panel theme-panel">
+            <div className="panel-head">
+              <h2>Files</h2>
+              <p>{expectedPresent} of {expectedStatus.length} expected files uploaded.</p>
+            </div>
+            <ul className="file-status">
+              {expectedStatus.map((f) => (
+                <li key={f.name} className="file-status-row" data-present={f.present}>
+                  <span className={`file-status-dot${f.present ? " is-present" : ""}`} aria-hidden="true" />
                   <span className="file-status-name">
-                    <code>{f}</code>
-                    <span className="file-status-role">{FILE_ROLE[f]}</span>
+                    <code>{f.name}</code>
+                    {f.label ? <span className="file-status-role">{f.label}</span> : null}
                   </span>
-                  {required ? (
-                    <span className="badge badge-slot file-status-tag">Required</span>
+                  {f.kind === "tracking" ? (
+                    <span
+                      className="badge badge-slot file-status-tag"
+                      title="The engine doesn't route this file on its own — tracked for your reference only."
+                    >
+                      {f.present ? "Uploaded" : "Tracking"}
+                    </span>
                   ) : (
-                    <span className="file-status-state">{present ? "Added" : "Optional"}</span>
+                    <span className="file-status-state">{f.present ? "Uploaded" : "Missing"}</span>
                   )}
                 </li>
-              );
-            })}
-          </ul>
-          {imageFiles.length > 0 ? (
-            <p className="file-status-images">
-              + {imageFiles.length} image{imageFiles.length === 1 ? "" : "s"}
-            </p>
-          ) : null}
+              ))}
+            </ul>
+            {imageFiles.length > 0 ? (
+              <p className="file-status-images">
+                + {imageFiles.length} image{imageFiles.length === 1 ? "" : "s"}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Expected-files checklist editor */}
+      <div className="panel theme-panel expected-panel">
+        <div className="panel-head">
+          <h2>Expected files checklist</h2>
+          <p>
+            Declare the files this theme is meant to include. List only what you
+            use — a minimal theme can skip pages it doesn&apos;t have. The six
+            standard files drive rendering, and any custom{" "}
+            <code className="field-code">name.html</code> you add becomes a live
+            page at <code className="field-code">/name</code> (e.g.{" "}
+            <code className="field-code">skills.html</code> →{" "}
+            <code className="field-code">/skills</code>). Other names (like{" "}
+            <code className="field-code">blog.css</code>) are tracked for your
+            reference only.
+          </p>
         </div>
+        <ExpectedFilesEditor themeKey={key} initialStatus={expectedStatus} />
       </div>
 
       {/* Action bar */}

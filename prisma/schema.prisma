@@ -124,6 +124,13 @@ model Theme {
   // "uploaded" -> rendered from the writable THEME_UPLOAD_DIR/<key>/ dir, so
   // admin-uploaded themes survive redeploys. The engine resolves files by this.
   source   String  @default("builtin")
+  // JSONB: the author's per-theme checklist of files they EXPECT this theme to
+  // have, as [{ name, label }]. Lets a theme declare only the files it actually
+  // uses (a minimal theme can hide unused page slots) and track custom-named
+  // extras (skills.html, blog.css, …) that the engine doesn't read but the
+  // author wants to remember to upload. Validated by Zod (ExpectedFilesSchema)
+  // on write. Empty array = fall back to showing the standard named files.
+  expectedFiles Json @default("[]")
 }
 
 model EngagementEvent {

@@ -138,6 +138,51 @@ describe("layout.html present wraps the page", () => {
   });
 });
 
+describe("custom pages auto-route at /<name>", () => {
+  beforeEach(async () => {
+    await makeActiveUploadedTheme("custom-pages");
+    await writeThemeFile(
+      "custom-pages",
+      "home.html",
+      `<nav>{% if pages.skills %}<a href="/skills">Skills</a>{% endif %}{% if pages.blog %}<a href="/blog">Blog</a>{% endif %}</nav><h1>{{ profile.name }}</h1>`,
+    );
+    await writeThemeFile("custom-pages", "skills.html", "<h1>My Skills</h1><p>{{ profile.name }}</p>");
+  });
+
+  it("serves a custom skills.html at /skills (200)", async () => {
+    const { html, status } = await renderPage("/skills");
+    expect(status).toBe(200);
+    expect(html).toContain("<h1>My Skills</h1>");
+    expect(html).toContain("Optional Test"); // gets the same site data
+  });
+
+  it("404s a custom URL when the file is absent (/blog without blog.html)", async () => {
+    expect((await renderPage("/blog")).status).toBe(404);
+  });
+
+  it("exposes pages.<slug> so nav can guard custom links", async () => {
+    const { html } = await renderPage("/");
+    expect(html).toContain('href="/skills"'); // skills.html exists
+    expect(html).not.toContain('href="/blog"'); // blog.html absent
+  });
+
+  it("wraps a custom page in layout.html when present", async () => {
+    await writeThemeFile("custom-pages", "layout.html", "<main>{{ content }}</main>");
+    const { html } = await renderPage("/skills");
+    expect(html).toContain("<main><h1>My Skills</h1>");
+  });
+
+  it("does not let a custom page shadow the fixed routes", async () => {
+    // Even if someone uploads an 'about.html'-shaped custom name, /about still
+    // maps to the fixed about page (here absent -> 404), and / stays home.
+    expect((await renderPage("/")).status).toBe(200);
+    // 'projects' is reserved: /projects/<slug> must still route to project.html
+    // (absent here) rather than a custom 'projects' page.
+    await writeThemeFile("custom-pages", "home.html", "<h1>{{ profile.name }}</h1>");
+    expect((await renderPage("/")).status).toBe(200);
+  });
+});
+
 describe("built-in themes still work (regression)", () => {
   beforeEach(async () => {
     await db.theme.deleteMany();

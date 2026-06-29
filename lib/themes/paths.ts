@@ -40,6 +40,58 @@ export function isRequiredThemeFile(file: string): boolean {
 // Used to build the `pages` flags themes use to guard nav links.
 export const OPTIONAL_PAGE_FILES = ["about.html", "contact.html", "project.html"] as const;
 
+// ---------------------------------------------------------------------------
+// Custom pages.
+//
+// Beyond the six fixed files, a theme may include ARBITRARY extra HTML pages
+// that auto-route at the top level: skills.html -> /skills, blog.html -> /blog.
+// The engine renders <name>.html for an unknown /<name> URL when that file
+// exists. Custom names get the same strict slug treatment as theme keys so they
+// can never traverse the filesystem, and they may not shadow the reserved
+// routes/files below.
+//
+// A custom page filename is "<slug>.html" where <slug> matches CUSTOM_PAGE_SLUG
+// (lowercase letters, digits, hyphens). The URL segment IS that slug.
+// ---------------------------------------------------------------------------
+
+// Reserved URL slugs that custom pages may NOT use, because the engine already
+// routes them (home is "/", projects is "/projects/<slug>") or they'd collide
+// with the fixed page files.
+export const RESERVED_PAGE_SLUGS = [
+  "home",
+  "about",
+  "contact",
+  "project",
+  "projects",
+  "layout",
+  "style",
+] as const;
+
+// A custom page slug: 1–40 chars, lowercase letters/digits/hyphens, not
+// starting/ending with a hyphen. Mirrors the theme-key rule so it's equally
+// traversal-safe.
+const CUSTOM_PAGE_SLUG = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
+
+// Is `slug` a usable custom-page slug (valid shape AND not reserved)?
+export function isValidCustomPageSlug(slug: string): boolean {
+  return CUSTOM_PAGE_SLUG.test(slug) && !(RESERVED_PAGE_SLUGS as readonly string[]).includes(slug);
+}
+
+// Is `name` a valid custom-page FILENAME ("<slug>.html", slug usable)? This is
+// what distinguishes an uploadable/routable custom page from the fixed files.
+export function isCustomPageFile(name: string): boolean {
+  if (!name.endsWith(".html")) return false;
+  if (name.includes("..") || name.includes("/") || name.includes("\\")) return false;
+  const slug = name.slice(0, -".html".length);
+  return isValidCustomPageSlug(slug);
+}
+
+// Map a URL segment to its custom page filename, or null if the segment isn't a
+// valid custom slug. Used by the engine to resolve /<name> -> <name>.html.
+export function customPageFileForSlug(slug: string): string | null {
+  return isValidCustomPageSlug(slug) ? `${slug}.html` : null;
+}
+
 // Image files a theme may include (decoration referenced from CSS/HTML as
 // /themes/<key>/<name>). Unlike the six named files, images have arbitrary
 // names, so they're validated by a STRICT filename pattern instead of an
@@ -63,15 +115,17 @@ export function isImageFile(name: string): boolean {
 }
 
 // A file is allowed to be uploaded into a theme if it's one of the six named
-// files OR a valid image filename. The engine reads only the six named files;
-// images are decoration served statically.
+// files, a valid custom PAGE ("<slug>.html"), OR a valid image filename. The
+// engine reads the six named files and any custom page; images are decoration
+// served statically.
 export function isAllowedUploadName(name: string): boolean {
-  return isValidThemeFile(name) || isImageFile(name);
+  return isValidThemeFile(name) || isCustomPageFile(name) || isImageFile(name);
 }
 
 // Human-readable list of what's accepted, for error messages and the UI hint.
 export const ALLOWED_UPLOAD_HINT =
   "home.html, about.html, contact.html, project.html, layout.html, style.css, " +
+  "custom pages like skills.html (auto-served at /skills), " +
   "and image files (.png .jpg .jpeg .svg .webp .ico)";
 
 // A theme key must be a simple slug: lowercase letters, digits, hyphens. This
@@ -109,7 +163,8 @@ export function themeDir(key: string, source: ThemeSource): string {
 }
 
 // Resolve a single file within a theme, validating both key and filename. The
-// file must be a named theme file OR a valid image name (both traversal-safe).
+// file must be a named theme file, a valid custom page, or a valid image name
+// (all traversal-safe).
 export function themeFilePath(key: string, source: ThemeSource, file: string): string {
   if (!isAllowedUploadName(file)) {
     throw new Error(`Invalid theme file: ${file}`);
